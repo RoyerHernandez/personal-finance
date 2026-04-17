@@ -1,180 +1,105 @@
 /**
  * Módulo Gastos Hormiga
- * Registro de gastos pequeños y seguimiento
  */
-
 class Expenses {
     constructor(container) {
         this.container = container;
-        this.chartInstances = {};
+        this.charts = {};
     }
 
     render() {
         const expenses = financeData.getExpenses();
-        const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-        const monthlyTarget = 500000; // Meta mensual de gastos hormiga
+        const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+        const monthlyTarget = 500000;
 
         this.container.innerHTML = `
-            <div class="expenses">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
-                    <h1>🐜 Gastos Hormiga</h1>
-                    <button class="btn btn-primary" onclick="app.currentModule.showAddExpenseModal()">
-                        + Nuevo Gasto
-                    </button>
-                </div>
+            <div class="flex-between mb-lg">
+                <h1>Gastos Hormiga</h1>
+                <button class="btn btn-primary" onclick="app.currentModule.showAddModal()">+ Nuevo Gasto</button>
+            </div>
 
-                <!-- KPIs -->
-                <div class="grid grid-3">
-                    <div class="kpi">
-                        <div class="kpi-label">Total Este Mes</div>
-                        <div class="kpi-value">${this.formatCurrency(totalExpenses)}</div>
-                    </div>
-                    <div class="kpi">
-                        <div class="kpi-label">Meta Mensual</div>
-                        <div class="kpi-value">${this.formatCurrency(monthlyTarget)}</div>
-                    </div>
-                    <div class="kpi ${totalExpenses > monthlyTarget ? 'warning' : 'success'}">
-                        <div class="kpi-label">Diferencia</div>
-                        <div class="kpi-value">${this.formatCurrency(monthlyTarget - totalExpenses)}</div>
-                    </div>
+            <div class="grid grid-3">
+                <div class="kpi red">
+                    <div class="kpi-label">Total Este Mes</div>
+                    <div class="kpi-value">${fmt(total)}</div>
                 </div>
-
-                <!-- Barra de progreso -->
-                <div class="card">
-                    <h3>Progreso hacia Meta</h3>
-                    <p class="text-muted">${Math.round((totalExpenses / monthlyTarget) * 100)}% de la meta</p>
-                    <div class="progress-bar">
-                        <div class="progress ${totalExpenses > monthlyTarget ? 'danger' : ''}" style="width: ${Math.min((totalExpenses / monthlyTarget) * 100, 100)}%"></div>
-                    </div>
+                <div class="kpi blue">
+                    <div class="kpi-label">Meta Mensual</div>
+                    <div class="kpi-value">${fmt(monthlyTarget)}</div>
                 </div>
-
-                <!-- Gastos por Categoría -->
-                <div class="card">
-                    <h3>Gastos por Categoría</h3>
-                    <div class="chart-container">
-                        <canvas id="expensesChart"></canvas>
-                    </div>
+                <div class="kpi ${total <= monthlyTarget ? 'green' : 'orange'}">
+                    <div class="kpi-label">Disponible</div>
+                    <div class="kpi-value">${fmt(monthlyTarget - total)}</div>
                 </div>
+            </div>
 
-                <!-- Tabla de Gastos -->
-                <div class="card">
-                    <h3>Historial de Gastos</h3>
-                    ${this.renderExpensesTable(expenses)}
+            <div class="card">
+                <h3>Progreso hacia Meta</h3>
+                <p class="text-muted mb-sm">${Math.min(Math.round((total / monthlyTarget) * 100), 100)}% consumido</p>
+                <div class="progress-bar">
+                    <div class="progress ${total > monthlyTarget ? 'red' : total > monthlyTarget * 0.7 ? 'orange' : 'green'}" style="width:${Math.min((total / monthlyTarget) * 100, 100)}%"></div>
                 </div>
+            </div>
 
-                <!-- Modal para agregar gasto -->
-                <div id="expenseModal" class="modal">
-                    <div class="modal-content">
-                        <div class="modal-header">Nuevo Gasto</div>
-                        <form onsubmit="app.currentModule.saveExpense(event)">
-                            <div class="form-group">
-                                <label>Categoría *</label>
-                                <select id="expenseCategory" required>
-                                    <option value="">Selecciona...</option>
-                                    <option value="Comida">Comida</option>
-                                    <option value="Transporte">Transporte</option>
-                                    <option value="Entretenimiento">Entretenimiento</option>
-                                    <option value="Salud">Salud</option>
-                                    <option value="Compras">Compras</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Monto *</label>
-                                <input type="number" id="expenseAmount" placeholder="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Descripción</label>
-                                <textarea id="expenseDescription" placeholder="Detalles del gasto..." rows="3"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Fecha</label>
-                                <input type="date" id="expenseDate">
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" onclick="app.currentModule.closeModal()">Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                            </div>
-                        </form>
-                    </div>
+            <div class="card">
+                <div class="card-header"><h3>Por Categoría</h3></div>
+                <div class="chart-container"><canvas id="expChart"></canvas></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3>Historial</h3></div>
+                ${this.renderTable(expenses)}
+            </div>
+
+            <!-- Modal -->
+            <div id="expenseModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">Nuevo Gasto</div>
+                    <form onsubmit="app.currentModule.saveExpense(event)">
+                        <div class="form-group">
+                            <label>Categoría *</label>
+                            <select id="expCat" required>
+                                <option value="">Selecciona...</option>
+                                ${CATEGORIAS.map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Monto *</label>
+                            <input type="number" id="expAmount" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <input type="text" id="expDesc" placeholder="Detalle...">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" id="expDate">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="app.currentModule.closeModal()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         `;
 
-        setTimeout(() => {
-            this.renderExpensesChart(expenses);
-        }, 100);
+        setTimeout(() => this.renderChart(expenses), 50);
     }
 
-    renderExpensesChart(expenses) {
-        const ctx = document.getElementById('expensesChart');
-        if (this.chartInstances.expenses) {
-            this.chartInstances.expenses.destroy();
-        }
+    renderTable(expenses) {
+        if (!expenses.length) return '<p class="text-muted">Sin gastos registrados</p>';
 
-        // Agrupar por categoría
-        const categoryData = {};
-        expenses.forEach(expense => {
-            const category = expense.category || 'Sin categoría';
-            categoryData[category] = (categoryData[category] || 0) + (expense.amount || 0);
-        });
-
-        const labels = Object.keys(categoryData);
-        const data = Object.values(categoryData);
-        const colors = [
-            'rgba(59, 130, 246, 0.8)',
-            'rgba(139, 92, 246, 0.8)',
-            'rgba(236, 72, 153, 0.8)',
-            'rgba(249, 115, 22, 0.8)',
-            'rgba(34, 197, 94, 0.8)',
-            'rgba(99, 102, 241, 0.8)'
-        ];
-
-        this.chartInstances.expenses = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels,
-                datasets: [{
-                    data,
-                    backgroundColor: colors.slice(0, data.length),
-                    borderColor: '#fff',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-    }
-
-    renderExpensesTable(expenses) {
-        if (expenses.length === 0) {
-            return '<p class="text-muted">Sin gastos registrados</p>';
-        }
-
-        // Ordena por fecha descendente
         const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+        let html = '<div class="table-container"><table><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th class="text-right">Monto</th><th></th></tr></thead><tbody>';
 
-        let html = '<div class="table-container"><table><thead><tr>';
-        html += '<th>Fecha</th><th>Categoría</th><th>Descripción</th><th class="text-right">Monto</th><th>Acciones</th>';
-        html += '</tr></thead><tbody>';
-
-        sorted.forEach((expense, idx) => {
-            const date = new Date(expense.date || new Date()).toLocaleDateString('es-CO');
+        sorted.forEach((e, i) => {
             html += `<tr>
-                <td>${date}</td>
-                <td>${expense.category || 'Sin categoría'}</td>
-                <td>${expense.description || '-'}</td>
-                <td class="text-right font-bold">${this.formatCurrency(expense.amount)}</td>
-                <td>
-                    <button class="btn btn-danger btn-small" onclick="app.currentModule.deleteExpense(${idx})">Eliminar</button>
-                </td>
+                <td>${new Date(e.date || Date.now()).toLocaleDateString('es-CO')}</td>
+                <td>${e.category}</td>
+                <td>${e.description || '—'}</td>
+                <td class="text-right font-bold">${fmt(e.amount)}</td>
+                <td><button class="btn-icon danger" onclick="app.currentModule.deleteExpense(${i})">✕</button></td>
             </tr>`;
         });
 
@@ -182,55 +107,61 @@ class Expenses {
         return html;
     }
 
-    showAddExpenseModal() {
+    showAddModal() {
         document.getElementById('expenseModal').classList.add('active');
-        document.getElementById('expenseCategory').value = '';
-        document.getElementById('expenseAmount').value = '';
-        document.getElementById('expenseDescription').value = '';
-        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
-    }
-
-    saveExpense(event) {
-        event.preventDefault();
-        const category = document.getElementById('expenseCategory').value;
-        const amount = parseFloat(document.getElementById('expenseAmount').value);
-        const description = document.getElementById('expenseDescription').value;
-        const date = document.getElementById('expenseDate').value;
-
-        if (!category || !amount) {
-            alert('Completa categoría y monto');
-            return;
-        }
-
-        financeData.addExpense({
-            category,
-            amount,
-            description,
-            date: date || new Date().toISOString().split('T')[0]
-        });
-
-        this.closeModal();
-        this.render();
-    }
-
-    deleteExpense(index) {
-        if (!confirm('¿Eliminar este gasto?')) return;
-        const expenses = financeData.getExpenses();
-        expenses.splice(index, 1);
-        financeData.data.expenses.items = expenses;
-        financeData.saveData();
-        this.render();
+        document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
     }
 
     closeModal() {
         document.getElementById('expenseModal').classList.remove('active');
     }
 
-    formatCurrency(value) {
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0
-        }).format(value || 0);
+    saveExpense(event) {
+        event.preventDefault();
+        const category = document.getElementById('expCat').value;
+        const amount = parseFloat(document.getElementById('expAmount').value);
+        const description = document.getElementById('expDesc').value;
+        const date = document.getElementById('expDate').value;
+
+        if (!category || !amount) { showToast('Completa categoría y monto', 'error'); return; }
+
+        financeData.addExpense({ category, amount, description, date: date || new Date().toISOString().split('T')[0] });
+        this.closeModal();
+        this.render();
+        showToast('Gasto registrado', 'success');
+    }
+
+    deleteExpense(idx) {
+        if (!confirm('¿Eliminar?')) return;
+        const items = financeData.getExpenses();
+        const sorted = [...items].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const toDelete = sorted[idx];
+        financeData.data.expenses.items = items.filter(e => e.id !== toDelete.id);
+        financeData.saveData();
+        this.render();
+        showToast('Gasto eliminado', 'warning');
+    }
+
+    renderChart(expenses) {
+        const ctx = document.getElementById('expChart');
+        if (!ctx) return;
+        if (this.charts.exp) this.charts.exp.destroy();
+
+        const cats = {};
+        expenses.forEach(e => { cats[e.category || 'Otro'] = (cats[e.category || 'Otro'] || 0) + (e.amount || 0); });
+
+        const colors = ['#3b82f6','#8b5cf6','#ec4899','#f97316','#10b981','#06b6d4','#ef4444','#f59e0b','#6366f1'];
+
+        this.charts.exp = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(cats),
+                datasets: [{ data: Object.values(cats), backgroundColor: colors.slice(0, Object.keys(cats).length), borderColor: '#1e293b', borderWidth: 2 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12 } } }
+            }
+        });
     }
 }

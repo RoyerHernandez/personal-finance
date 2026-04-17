@@ -1,295 +1,215 @@
 /**
- * Módulo Períodos
- * Gestión flexible de períodos (quincenas, meses, etc.)
+ * Módulo Períodos - Gestión con edición inline
  */
-
 class Periods {
     constructor(container) {
         this.container = container;
-        this.editingPeriod = null;
-        this.editingItem = null;
+        this.selectedPeriod = Object.keys(financeData.getPeriods())[0] || null;
     }
 
     render() {
         const periods = financeData.getPeriods();
+        const names = Object.keys(periods);
 
         this.container.innerHTML = `
-            <div class="periods">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
-                    <h1>📅 Períodos</h1>
-                    <button class="btn btn-primary" onclick="app.currentModule.showCreatePeriodModal()">
-                        + Nuevo Período
-                    </button>
-                </div>
+            <div class="flex-between mb-lg">
+                <h1>Períodos de Pago</h1>
+                <button class="btn btn-primary" onclick="app.currentModule.showCreateModal()">+ Nuevo Período</button>
+            </div>
 
-                <div id="periodsContainer" class="periods-list">
-                    ${this.renderPeriods(periods)}
+            ${names.length ? `
+                <div class="mb-lg" style="display:flex;gap:var(--spacing-md);align-items:center;flex-wrap:wrap;">
+                    <select id="periodSelect" class="inline-select" style="padding:8px 12px;background:var(--bg-surface);border:1px solid var(--border-color);color:var(--text-primary);border-radius:var(--radius);font-size:0.9rem;">
+                        ${names.map(n => `<option value="${n}" ${n === this.selectedPeriod ? 'selected' : ''}>${n}</option>`).join('')}
+                    </select>
+                    ${this.selectedPeriod ? `
+                        <span class="badge badge-${periods[this.selectedPeriod]?.type || 'quincena'}">${periods[this.selectedPeriod]?.type || 'quincena'}</span>
+                        <button class="btn btn-danger btn-small" onclick="app.currentModule.deletePeriod()">Eliminar Período</button>
+                    ` : ''}
                 </div>
+                ${this.selectedPeriod ? this.renderPeriodDetail(this.selectedPeriod) : ''}
+            ` : '<div class="alert alert-info">No hay períodos. Crea uno para empezar.</div>'}
 
-                <!-- Modal para crear/editar período -->
-                <div id="periodModal" class="modal">
-                    <div class="modal-content">
-                        <div class="modal-header">Nuevo Período</div>
-                        <form onsubmit="app.currentModule.savePeriod(event)">
-                            <div class="form-group">
-                                <label>Nombre del Período *</label>
-                                <input type="text" id="periodName" placeholder="Ej: Enero, Quincena 1" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Ingresos esperados *</label>
-                                <input type="number" id="periodIncome" placeholder="Ej: 2200000" required>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" onclick="app.currentModule.closeModal()">Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Crear</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Modal para añadir/editar item -->
-                <div id="itemModal" class="modal">
-                    <div class="modal-content">
-                        <div class="modal-header">Añadir Item</div>
-                        <form onsubmit="app.currentModule.saveItem(event)">
-                            <div class="form-group">
-                                <label>Nombre *</label>
-                                <input type="text" id="itemName" placeholder="Ej: Cuota de la casa" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Tipo *</label>
-                                <select id="itemType" required onchange="app.currentModule.updateItemTypeFields()">
-                                    <option value="">Selecciona...</option>
-                                    <option value="expense">Gasto</option>
-                                    <option value="debt">Deuda</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="amountGroup">
-                                <label>Monto (para este período)</label>
-                                <input type="number" id="itemAmount" placeholder="0">
-                            </div>
-                            <div class="form-group" id="debtGroup" style="display: none;">
-                                <label>Saldo de Deuda</label>
-                                <input type="number" id="itemDebt" placeholder="0">
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" onclick="app.currentModule.closeModal()">Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                            </div>
-                        </form>
-                    </div>
+            <!-- Modal crear período -->
+            <div id="periodModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">Nuevo Período</div>
+                    <form onsubmit="app.currentModule.savePeriod(event)">
+                        <div class="form-group">
+                            <label>Nombre *</label>
+                            <input type="text" id="periodName" placeholder="Ej: Quincena 1-15 Febrero" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <select id="periodType">
+                                <option value="quincena">Quincena</option>
+                                <option value="mensual">Mensual</option>
+                                <option value="personalizado">Personalizado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha inicio</label>
+                            <input type="date" id="periodStart">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha fin</label>
+                            <input type="date" id="periodEnd">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="app.currentModule.closeModal()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Crear</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         `;
 
-        // Re-attachear event listeners
-        this.attachEventListeners();
+        // Event: cambiar período
+        const sel = document.getElementById('periodSelect');
+        if (sel) {
+            sel.addEventListener('change', (e) => {
+                this.selectedPeriod = e.target.value;
+                this.render();
+            });
+        }
     }
 
-    renderPeriods(periods) {
-        const periodsArray = Object.values(periods);
+    renderPeriodDetail(name) {
+        const c = financeData.calcPeriodo(name);
+        const p = financeData.getPeriod(name);
+        const items = p.items || [];
 
-        if (periodsArray.length === 0) {
-            return '<div class="alert alert-info">No hay períodos. Crea uno para empezar.</div>';
-        }
+        return `
+            <div class="stats-row">
+                <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value text-success">${fmt(c.totIngreso)}</div></div>
+                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value text-danger">${fmt(c.totEgreso)}</div></div>
+                <div class="stat-item"><div class="stat-label">Saldo Disp.</div><div class="stat-value text-warning">${fmt(c.totSaldo)}</div></div>
+                <div class="stat-item"><div class="stat-label">Flujo Neto</div><div class="stat-value ${c.neto >= 0 ? 'text-success' : 'text-danger'}">${fmt(c.neto)}</div></div>
+            </div>
 
-        let html = '';
-        periodsArray.forEach(period => {
-            const summary = financeData.getPeriodSummary(period.name);
-            html += `
-                <div class="card">
-                    <div class="card-header">
-                        <div>
-                            <h3>${period.name}</h3>
-                            <p class="text-muted">Ingresos: ${this.formatCurrency(period.income || 0)}</p>
-                        </div>
-                        <div style="display: flex; gap: var(--spacing-md);">
-                            <button class="btn btn-secondary btn-small" onclick="app.currentModule.addItemToPeriod('${period.name}')">
-                                + Item
-                            </button>
-                            <button class="btn btn-danger btn-small" onclick="app.currentModule.deletePeriod('${period.name}')">
-                                Eliminar
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Resumen del período -->
-                    <div class="stats-row">
-                        <div class="stat-item">
-                            <div class="stat-label">Ingresos</div>
-                            <div class="stat-value text-success">${this.formatCurrency(summary.income)}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Gastos</div>
-                            <div class="stat-value text-danger">${this.formatCurrency(summary.totalExpenses)}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Deudas</div>
-                            <div class="stat-value text-warning">${this.formatCurrency(summary.totalDebts)}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Balance</div>
-                            <div class="stat-value ${summary.balance >= 0 ? 'text-success' : 'text-danger'}">${this.formatCurrency(summary.balance)}</div>
-                        </div>
-                    </div>
-
-                    <!-- Tabla de items -->
-                    ${this.renderItemsTable(period.name, period.items || [])}
+            <div class="card">
+                <div class="card-header">
+                    <h3>Items del Período</h3>
+                    <button class="btn btn-primary btn-small" onclick="app.currentModule.addItem()">+ Agregar</button>
                 </div>
-            `;
-        });
-
-        return html;
+                <div class="table-container">
+                    <table>
+                        <thead><tr>
+                            <th>Concepto</th>
+                            <th>Categoría</th>
+                            <th class="text-right">Saldo</th>
+                            <th class="text-right">Ingreso</th>
+                            <th class="text-right">Egreso</th>
+                            <th>Estado</th>
+                            <th>Deuda</th>
+                            <th></th>
+                        </tr></thead>
+                        <tbody>
+                            ${items.map(item => this.renderItemRow(item)).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight:700;">
+                                <td colspan="2">Totales</td>
+                                <td class="text-right text-warning">${fmt(c.totSaldo)}</td>
+                                <td class="text-right text-success">${fmt(c.totIngreso)}</td>
+                                <td class="text-right text-danger">${fmt(c.totEgreso)}</td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        `;
     }
 
-    renderItemsTable(periodName, items) {
-        if (items.length === 0) {
-            return '<p class="text-muted mb-lg">Sin items. Añade uno.</p>';
-        }
+    renderItemRow(item) {
+        const debt = item.debtId ? financeData.getDebtById(item.debtId) : null;
+        const debtLabel = debt ? `${debt.name} (${fmt(debt.currentAmount)})` : '—';
 
-        let html = '<div class="table-container"><table><thead><tr>';
-        html += '<th>Nombre</th><th>Tipo</th><th class="text-right">Monto</th><th class="text-right">Deuda</th><th>Acciones</th>';
-        html += '</tr></thead><tbody>';
-
-        items.forEach(item => {
-            html += `<tr>
-                <td>${item.name}</td>
-                <td>
-                    <span class="badge" style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; ${
-                        item.type === 'expense' ? 'background: rgba(239, 68, 68, 0.2); color: rgb(239, 68, 68);' :
-                        'background: rgba(249, 115, 22, 0.2); color: rgb(249, 115, 22);'
-                    }">
-                        ${item.type === 'expense' ? 'Gasto' : 'Deuda'}
-                    </span>
-                </td>
-                <td class="text-right">${this.formatCurrency(item.amount || 0)}</td>
-                <td class="text-right">${this.formatCurrency(item.debt || 0)}</td>
-                <td>
-                    <button class="btn btn-secondary btn-small" onclick="app.currentModule.editItem('${periodName}', ${item.id})">Editar</button>
-                    <button class="btn btn-danger btn-small" onclick="app.currentModule.deleteItem('${periodName}', ${item.id})">Borrar</button>
-                </td>
-            </tr>`;
-        });
-
-        html += '</tbody></table></div>';
-        return html;
+        return `<tr data-id="${item.id}">
+            <td><input class="inline-input" value="${item.concept}" data-field="concept" onchange="app.currentModule.onEdit(${item.id}, 'concept', this.value)"></td>
+            <td>
+                <select class="inline-select" data-field="category" onchange="app.currentModule.onEdit(${item.id}, 'category', this.value)">
+                    ${CATEGORIAS.map(c => `<option value="${c}" ${item.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                </select>
+            </td>
+            <td><input class="inline-input text-right" type="number" value="${item.saldo || 0}" data-field="saldo" onchange="app.currentModule.onEditNum(${item.id}, 'saldo', this.value)"></td>
+            <td><input class="inline-input text-right" type="number" value="${item.ingreso || 0}" data-field="ingreso" onchange="app.currentModule.onEditNum(${item.id}, 'ingreso', this.value)"></td>
+            <td><input class="inline-input text-right" type="number" value="${item.egreso || 0}" data-field="egreso" onchange="app.currentModule.onEditNum(${item.id}, 'egreso', this.value)"></td>
+            <td>
+                <select class="inline-select" data-field="estado" onchange="app.currentModule.onEdit(${item.id}, 'estado', this.value)">
+                    ${ESTADOS.map(e => `<option value="${e}" ${item.estado === e ? 'selected' : ''}>${e}</option>`).join('')}
+                </select>
+            </td>
+            <td style="font-size:0.75rem;color:var(--text-muted)">${debtLabel}</td>
+            <td><button class="btn-icon danger" onclick="app.currentModule.deleteItem(${item.id})" title="Eliminar">✕</button></td>
+        </tr>`;
     }
 
-    showCreatePeriodModal() {
+    onEdit(itemId, field, value) {
+        financeData.updateItemInPeriod(this.selectedPeriod, itemId, { [field]: value });
+        showToast('Guardado', 'success');
+    }
+
+    onEditNum(itemId, field, value) {
+        financeData.updateItemInPeriod(this.selectedPeriod, itemId, { [field]: parseFloat(value) || 0 });
+        // Refresh stats
+        this.render();
+        showToast('Guardado', 'success');
+    }
+
+    addItem() {
+        if (!this.selectedPeriod) return;
+        financeData.addItemToPeriod(this.selectedPeriod, {
+            concept: 'Nuevo item',
+            category: 'Otro',
+            ingreso: 0,
+            egreso: 0,
+            saldo: 0,
+            estado: 'pendiente',
+            debtId: null
+        });
+        this.render();
+        showToast('Item agregado', 'info');
+    }
+
+    deleteItem(itemId) {
+        if (!confirm('¿Eliminar este item?')) return;
+        financeData.deleteItemFromPeriod(this.selectedPeriod, itemId);
+        this.render();
+        showToast('Item eliminado', 'warning');
+    }
+
+    deletePeriod() {
+        if (!confirm(`¿Eliminar "${this.selectedPeriod}"?`)) return;
+        financeData.deletePeriod(this.selectedPeriod);
+        const names = Object.keys(financeData.getPeriods());
+        this.selectedPeriod = names[0] || null;
+        this.render();
+        showToast('Período eliminado', 'warning');
+    }
+
+    showCreateModal() {
         document.getElementById('periodModal').classList.add('active');
-        document.getElementById('periodName').value = '';
-        document.getElementById('periodIncome').value = '';
-        this.editingPeriod = null;
+    }
+
+    closeModal() {
+        document.getElementById('periodModal').classList.remove('active');
     }
 
     savePeriod(event) {
         event.preventDefault();
         const name = document.getElementById('periodName').value.trim();
-        const income = parseFloat(document.getElementById('periodIncome').value);
+        const type = document.getElementById('periodType').value;
+        const startDate = document.getElementById('periodStart').value;
+        const endDate = document.getElementById('periodEnd').value;
 
-        if (!name || !income) {
-            alert('Completa todos los campos');
-            return;
-        }
+        if (!name) { showToast('Nombre requerido', 'error'); return; }
 
-        financeData.setPeriod(name, {
-            income,
-            items: []
-        });
-
+        financeData.setPeriod(name, { type, startDate, endDate, items: [] });
+        this.selectedPeriod = name;
         this.closeModal();
         this.render();
-    }
-
-    addItemToPeriod(periodName) {
-        this.editingPeriod = periodName;
-        this.editingItem = null;
-        document.getElementById('itemModal').classList.add('active');
-        document.getElementById('itemName').value = '';
-        document.getElementById('itemType').value = '';
-        document.getElementById('itemAmount').value = '';
-        document.getElementById('itemDebt').value = '';
-    }
-
-    editItem(periodName, itemId) {
-        const period = financeData.getPeriod(periodName);
-        const item = period.items.find(i => i.id === itemId);
-
-        if (!item) return;
-
-        this.editingPeriod = periodName;
-        this.editingItem = item;
-
-        document.getElementById('itemModal').classList.add('active');
-        document.getElementById('itemName').value = item.name;
-        document.getElementById('itemType').value = item.type;
-        document.getElementById('itemAmount').value = item.amount || 0;
-        document.getElementById('itemDebt').value = item.debt || 0;
-
-        this.updateItemTypeFields();
-    }
-
-    updateItemTypeFields() {
-        const type = document.getElementById('itemType').value;
-        document.getElementById('debtGroup').style.display = type === 'debt' ? 'block' : 'none';
-        document.getElementById('amountGroup').style.display = type === 'expense' ? 'block' : 'none';
-    }
-
-    saveItem(event) {
-        event.preventDefault();
-        const name = document.getElementById('itemName').value.trim();
-        const type = document.getElementById('itemType').value;
-        const amount = parseFloat(document.getElementById('itemAmount').value) || 0;
-        const debt = parseFloat(document.getElementById('itemDebt').value) || 0;
-
-        if (!name || !type) {
-            alert('Completa los campos requeridos');
-            return;
-        }
-
-        const itemData = {
-            name,
-            type,
-            amount: type === 'expense' ? amount : 0,
-            debt: type === 'debt' ? debt : 0
-        };
-
-        if (this.editingItem) {
-            financeData.updateItemInPeriod(this.editingPeriod, this.editingItem.id, itemData);
-        } else {
-            financeData.addItemToPeriod(this.editingPeriod, itemData);
-        }
-
-        this.closeModal();
-        this.render();
-    }
-
-    deleteItem(periodName, itemId) {
-        if (!confirm('¿Eliminar este item?')) return;
-        financeData.deleteItemFromPeriod(periodName, itemId);
-        this.render();
-    }
-
-    deletePeriod(periodName) {
-        if (!confirm(`¿Eliminar el período "${periodName}"?`)) return;
-        financeData.deletePeriod(periodName);
-        this.render();
-    }
-
-    closeModal() {
-        document.getElementById('periodModal').classList.remove('active');
-        document.getElementById('itemModal').classList.remove('active');
-    }
-
-    attachEventListeners() {
-        // Los event listeners ya están en el HTML con onclick
-    }
-
-    formatCurrency(value) {
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0
-        }).format(value || 0);
+        showToast('Período creado', 'success');
     }
 }

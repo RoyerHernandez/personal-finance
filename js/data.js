@@ -3,15 +3,32 @@
  * Maneja localStorage y estructura de datos
  */
 
+/** Formatea número como moneda COP */
+function fmt(n) {
+    return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0
+    }).format(n || 0);
+}
+
+/** Formatea moneda abreviada */
+function fmtShort(value) {
+    if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+    if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+    return value;
+}
+
+const CATEGORIAS = ['Vivienda', 'Transporte', 'Alimentación', 'Educación', 'Servicios', 'Seguros', 'Deuda', 'Ahorro', 'Entretenimiento', 'Salud', 'Otro'];
+const FRECUENCIAS = ['quincenal', 'mensual', 'semanal', 'única vez', 'anual'];
+const ESTADOS = ['pendiente', 'pagado', 'vencido'];
+
 class FinanceData {
     constructor() {
-        this.storageKey = 'financeAppData';
+        this.storageKey = 'finanzas_v1';
         this.data = this.loadData();
     }
 
-    /**
-     * Carga datos del localStorage o retorna datos por defecto
-     */
     loadData() {
         const stored = localStorage.getItem(this.storageKey);
         if (stored) {
@@ -25,240 +42,192 @@ class FinanceData {
         return this.getDefaultData();
     }
 
-    /**
-     * Estructura de datos por defecto
-     */
     getDefaultData() {
         return {
             settings: {
                 currency: 'COP',
-                periodType: 'monthly', // 'monthly', 'biweekly'
-                periodNames: ['Mes 1', 'Mes 2'], // Flexible para quincenas o meses
-                startDate: new Date().toISOString().split('T')[0]
+                periodType: 'biweekly'
             },
+            // Deudas centralizadas — única fuente de verdad
+            debts: [
+                { id: 1, name: 'Cuota de la Casa', initialAmount: 14749153, currentAmount: 14749153, monthlyPayment: 450000, startDate: '2024-01-01' },
+                { id: 2, name: 'Av Villas', initialAmount: 12757000, currentAmount: 12757000, monthlyPayment: 1740000, startDate: '2024-01-01' },
+                { id: 3, name: 'Bancolombia TC', initialAmount: 7598276, currentAmount: 7598276, monthlyPayment: 475186, startDate: '2024-01-01' },
+                { id: 4, name: 'Crédito Davivienda', initialAmount: 2200000, currentAmount: 2200000, monthlyPayment: 0, startDate: '2024-01-01' },
+                { id: 5, name: 'Fincomercio', initialAmount: 4500000, currentAmount: 4500000, monthlyPayment: 0, startDate: '2024-01-01' },
+                { id: 6, name: 'TC Finandina', initialAmount: 3400000, currentAmount: 3400000, monthlyPayment: 390000, startDate: '2024-01-01' },
+                { id: 7, name: 'TC Cooperativa', initialAmount: 2500000, currentAmount: 2500000, monthlyPayment: 260000, startDate: '2024-01-01' }
+            ],
+            // Períodos con items que referencian deudas por debtId
             periods: {
-                // Estructura flexible: periods[nombrePeriodo]
-                'Período 1': {
-                    name: 'Período 1',
-                    income: 2200000,
+                'Quincena 1-15': {
+                    name: 'Quincena 1-15',
+                    type: 'quincena',
+                    startDate: '2024-01-01',
+                    endDate: '2024-01-15',
                     items: [
-                        { id: 1, name: 'Cuota Natación Emily', type: 'expense', amount: 0, debt: 0 },
-                        { id: 2, name: 'Cuota de la Casa', type: 'expense', amount: 450000, debt: 14749153 },
-                        { id: 3, name: 'Crédito Davivienda', type: 'debt', amount: 0, debt: 2200000 },
-                        { id: 4, name: 'Servicios', type: 'expense', amount: 500000, debt: 0 }
+                        { id: 101, concept: 'Cuota Natación Emily', category: 'Educación', ingreso: 2200000, egreso: 0, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 102, concept: 'Cuota de la Casa', category: 'Vivienda', ingreso: 0, egreso: 450000, saldo: 0, estado: 'pagado', debtId: 1 },
+                        { id: 103, concept: 'Crédito Davivienda', category: 'Deuda', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: 4 },
+                        { id: 104, concept: 'Av Villas', category: 'Deuda', ingreso: 0, egreso: 1740000, saldo: 0, estado: 'pagado', debtId: 2 },
+                        { id: 105, concept: 'TC Finandina', category: 'Deuda', ingreso: 0, egreso: 390000, saldo: 0, estado: 'pagado', debtId: 6 },
+                        { id: 106, concept: 'Tigo', category: 'Servicios', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
+                        { id: 107, concept: 'Almuerzos', category: 'Alimentación', ingreso: 0, egreso: 0, saldo: 200000, estado: 'pendiente', debtId: null },
+                        { id: 108, concept: 'Transportes', category: 'Transporte', ingreso: 0, egreso: 0, saldo: 70000, estado: 'pendiente', debtId: null },
+                        { id: 109, concept: 'Movistar mío', category: 'Servicios', ingreso: 0, egreso: 323000, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 110, concept: 'Movistar Laus', category: 'Servicios', ingreso: 0, egreso: 51000, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 111, concept: 'Universidad Laus', category: 'Educación', ingreso: 0, egreso: 1250000, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 112, concept: 'Cadena', category: 'Otro', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
+                        { id: 113, concept: 'Apartamento', category: 'Vivienda', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
+                        { id: 114, concept: 'Ahorro Littio', category: 'Ahorro', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null }
                     ]
                 },
-                'Período 2': {
-                    name: 'Período 2',
-                    income: 2200000,
+                'Quincena 15-30': {
+                    name: 'Quincena 15-30',
+                    type: 'quincena',
+                    startDate: '2024-01-15',
+                    endDate: '2024-01-30',
                     items: [
-                        { id: 5, name: 'Bancolombia TC', type: 'debt', amount: 0, debt: 7598276 },
-                        { id: 6, name: 'Cooperativa', type: 'debt', amount: 0, debt: 3850000 },
-                        { id: 7, name: 'Recibos', type: 'expense', amount: 200000, debt: 0 },
-                        { id: 8, name: 'Impuesto', type: 'expense', amount: 300000, debt: 0 }
+                        { id: 201, concept: 'Movistar', category: 'Servicios', ingreso: 3000000, egreso: 160000, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 202, concept: 'Bancolombia TC', category: 'Deuda', ingreso: 0, egreso: 475186, saldo: 0, estado: 'pagado', debtId: 3 },
+                        { id: 203, concept: 'TC Cooperativa', category: 'Deuda', ingreso: 0, egreso: 260000, saldo: 0, estado: 'pagado', debtId: 7 },
+                        { id: 204, concept: 'Ahorro Programado Cooperativa', category: 'Ahorro', ingreso: 0, egreso: 0, saldo: 71000, estado: 'pendiente', debtId: null },
+                        { id: 205, concept: 'Fincomercio', category: 'Deuda', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: 5 },
+                        { id: 206, concept: 'Almuerzos', category: 'Alimentación', ingreso: 0, egreso: 0, saldo: 200000, estado: 'pendiente', debtId: null },
+                        { id: 207, concept: 'Transportes', category: 'Transporte', ingreso: 0, egreso: 0, saldo: 70000, estado: 'pendiente', debtId: null },
+                        { id: 208, concept: 'Recibos', category: 'Servicios', ingreso: 0, egreso: 200000, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 209, concept: 'Abuelo', category: 'Otro', ingreso: 0, egreso: 0, saldo: 60000, estado: 'pendiente', debtId: null },
+                        { id: 210, concept: 'Skandia', category: 'Seguros', ingreso: 0, egreso: 350000, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 211, concept: 'Apartamento', category: 'Vivienda', ingreso: 0, egreso: 1090000, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 212, concept: 'Impuesto', category: 'Otro', ingreso: 0, egreso: 300000, saldo: 0, estado: 'pagado', debtId: null }
                     ]
                 }
             },
-            debts: [
-                { id: 1, name: 'Cuota de la Casa', initialAmount: 14749153, currentAmount: 14749153, monthlyPayment: 450000, startDate: '2024-01-01' },
-                { id: 2, name: 'Av. Villas', initialAmount: 12757000, currentAmount: 12757000, monthlyPayment: 400000, startDate: '2024-01-01' },
-                { id: 3, name: 'Bancolombia TC', initialAmount: 7598276, currentAmount: 7598276, monthlyPayment: 300000, startDate: '2024-01-01' },
-                { id: 4, name: 'Crédito Davivienda', initialAmount: 2200000, currentAmount: 2200000, monthlyPayment: 150000, startDate: '2024-01-01' },
-                { id: 5, name: 'Cooperativa', initialAmount: 3850000, currentAmount: 3850000, monthlyPayment: 200000, startDate: '2024-01-01' }
-            ],
-            expenses: {
-                // Gastos hormiga: { date, category, amount, description }
-                items: []
-            },
+            expenses: { items: [] },
             income: {
-                // Fuentes de ingreso: { date, source, amount, period }
                 sources: [
-                    { id: 1, name: 'Salario Principal', monthlyAmount: 2200000 },
-                    { id: 2, name: 'Ingresos Adicionales', monthlyAmount: 0 }
+                    { id: 1, name: 'Cuota Natación Emily', frequency: 'quincenal', estimado: 2200000, real: 2200000, period: 'Quincena 1-15' },
+                    { id: 2, name: 'Movistar (Salario)', frequency: 'quincenal', estimado: 3000000, real: 3000000, period: 'Quincena 15-30' }
                 ],
                 history: []
             }
         };
     }
 
-    /**
-     * Guarda datos en localStorage
-     */
     saveData() {
         localStorage.setItem(this.storageKey, JSON.stringify(this.data));
+        localStorage.setItem('finanzas_lastUpdate', new Date().toISOString());
     }
 
-    /**
-     * Obtiene todos los períodos
-     */
-    getPeriods() {
-        return this.data.periods || {};
-    }
+    // --- Períodos ---
+    getPeriods() { return this.data.periods || {}; }
+    getPeriod(name) { return this.data.periods[name] || null; }
 
-    /**
-     * Obtiene un período específico
-     */
-    getPeriod(periodName) {
-        return this.data.periods[periodName] || null;
-    }
-
-    /**
-     * Crea o actualiza un período
-     */
-    setPeriod(periodName, periodData) {
-        if (!this.data.periods) this.data.periods = {};
-        this.data.periods[periodName] = {
-            name: periodName,
-            income: periodData.income || 0,
-            items: periodData.items || []
-        };
+    setPeriod(name, periodData) {
+        this.data.periods[name] = { name, ...periodData };
         this.saveData();
     }
 
-    /**
-     * Elimina un período
-     */
-    deletePeriod(periodName) {
-        if (this.data.periods) {
-            delete this.data.periods[periodName];
-            this.saveData();
-        }
+    deletePeriod(name) {
+        delete this.data.periods[name];
+        this.saveData();
     }
 
-    /**
-     * Añade un item a un período
-     */
     addItemToPeriod(periodName, item) {
-        const period = this.getPeriod(periodName);
-        if (period) {
-            if (!period.items) period.items = [];
-            item.id = Date.now();
-            period.items.push(item);
-            this.saveData();
-            return item;
-        }
-        return null;
+        const p = this.getPeriod(periodName);
+        if (!p) return null;
+        if (!p.items) p.items = [];
+        item.id = Date.now();
+        p.items.push(item);
+        this.saveData();
+        return item;
     }
 
-    /**
-     * Actualiza un item en un período
-     */
     updateItemInPeriod(periodName, itemId, updates) {
-        const period = this.getPeriod(periodName);
-        if (period && period.items) {
-            const item = period.items.find(i => i.id === itemId);
-            if (item) {
-                Object.assign(item, updates);
-                this.saveData();
-                return item;
-            }
-        }
-        return null;
+        const p = this.getPeriod(periodName);
+        if (!p || !p.items) return null;
+        const item = p.items.find(i => i.id === itemId);
+        if (!item) return null;
+        Object.assign(item, updates);
+        this.saveData();
+        return item;
     }
 
-    /**
-     * Elimina un item de un período
-     */
     deleteItemFromPeriod(periodName, itemId) {
-        const period = this.getPeriod(periodName);
-        if (period && period.items) {
-            period.items = period.items.filter(i => i.id !== itemId);
+        const p = this.getPeriod(periodName);
+        if (p && p.items) {
+            p.items = p.items.filter(i => i.id !== itemId);
             this.saveData();
         }
     }
 
-    /**
-     * Obtiene todas las deudas
-     */
-    getDebts() {
-        return this.data.debts || [];
-    }
+    // --- Deudas (fuente única) ---
+    getDebts() { return this.data.debts || []; }
 
-    /**
-     * Obtiene el total de deudas
-     */
     getTotalDebt() {
-        return this.getDebts().reduce((sum, debt) => sum + (debt.currentAmount || 0), 0);
+        return this.getDebts().reduce((s, d) => s + (d.currentAmount || 0), 0);
     }
 
-    /**
-     * Actualiza una deuda
-     */
-    updateDebt(debtId, updates) {
-        const debt = this.data.debts.find(d => d.id === debtId);
-        if (debt) {
-            Object.assign(debt, updates);
-            this.saveData();
-            return debt;
-        }
-        return null;
+    getDebtById(id) {
+        return this.getDebts().find(d => d.id === id) || null;
     }
 
-    /**
-     * Calcula resumen de un período
-     */
-    getPeriodSummary(periodName) {
-        const period = this.getPeriod(periodName);
-        if (!period) return null;
-
-        const items = period.items || [];
-        const expenses = items.filter(i => i.type === 'expense');
-        const debts = items.filter(i => i.type === 'debt');
-
-        const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-        const totalDebts = debts.reduce((sum, d) => sum + (d.debt || 0), 0);
-        const balance = (period.income || 0) - totalExpenses;
-
-        return {
-            periodName,
-            income: period.income || 0,
-            totalExpenses,
-            totalDebts,
-            balance,
-            items
-        };
+    addDebt(debt) {
+        debt.id = Date.now();
+        this.data.debts.push(debt);
+        this.saveData();
+        return debt;
     }
 
-    /**
-     * Calcula resumen general
-     */
-    getGeneralSummary() {
-        const periods = Object.values(this.getPeriods());
-        let totalIncome = 0;
-        let totalExpenses = 0;
-        let totalDebtBalance = 0;
+    updateDebt(id, updates) {
+        const d = this.getDebtById(id);
+        if (d) { Object.assign(d, updates); this.saveData(); }
+        return d;
+    }
 
-        periods.forEach(period => {
-            totalIncome += period.income || 0;
-            const items = period.items || [];
-            items.forEach(item => {
-                if (item.type === 'expense') {
-                    totalExpenses += item.amount || 0;
-                } else if (item.type === 'debt') {
-                    totalDebtBalance += item.debt || 0;
-                }
+    deleteDebt(id) {
+        this.data.debts = this.data.debts.filter(d => d.id !== id);
+        // Limpiar referencias en períodos
+        Object.values(this.data.periods).forEach(p => {
+            (p.items || []).forEach(item => {
+                if (item.debtId === id) item.debtId = null;
             });
         });
+        this.saveData();
+    }
 
+    // --- Cálculos ---
+    calcPeriodo(periodName) {
+        const p = this.getPeriod(periodName);
+        if (!p) return { totIngreso: 0, totEgreso: 0, totSaldo: 0, neto: 0 };
+        const items = p.items || [];
+        const totIngreso = items.reduce((s, i) => s + (i.ingreso || 0), 0);
+        const totEgreso = items.reduce((s, i) => s + (i.egreso || 0), 0);
+        const totSaldo = items.reduce((s, i) => s + (i.saldo || 0), 0);
+        return { totIngreso, totEgreso, totSaldo, neto: totIngreso - totEgreso - totSaldo };
+    }
+
+    getGeneralSummary() {
+        const periods = Object.keys(this.data.periods);
+        let totalIncome = 0, totalExpenses = 0, totalSaldo = 0;
+        periods.forEach(name => {
+            const c = this.calcPeriodo(name);
+            totalIncome += c.totIngreso;
+            totalExpenses += c.totEgreso;
+            totalSaldo += c.totSaldo;
+        });
         return {
             totalIncome,
             totalExpenses,
-            totalDebtBalance,
-            balance: totalIncome - totalExpenses,
-            totalDebtAmount: this.getTotalDebt()
+            totalSaldo,
+            neto: totalIncome - totalExpenses - totalSaldo,
+            totalDebt: this.getTotalDebt()
         };
     }
 
-    /**
-     * Obtiene gastos hormiga
-     */
-    getExpenses() {
-        return this.data.expenses?.items || [];
-    }
+    // --- Gastos hormiga ---
+    getExpenses() { return this.data.expenses?.items || []; }
 
-    /**
-     * Añade un gasto hormiga
-     */
     addExpense(expense) {
         if (!this.data.expenses) this.data.expenses = {};
         if (!this.data.expenses.items) this.data.expenses.items = [];
@@ -268,65 +237,31 @@ class FinanceData {
         return expense;
     }
 
-    /**
-     * Obtiene fuentes de ingresos
-     */
-    getIncomeSources() {
-        return this.data.income?.sources || [];
-    }
+    // --- Ingresos ---
+    getIncomeSources() { return this.data.income?.sources || []; }
+    getIncomeHistory() { return this.data.income?.history || []; }
 
-    /**
-     * Obtiene historial de ingresos
-     */
-    getIncomeHistory() {
-        return this.data.income?.history || [];
-    }
-
-    /**
-     * Obtiene configuración
-     */
-    getSettings() {
-        return this.data.settings || {};
-    }
-
-    /**
-     * Actualiza configuración
-     */
+    // --- Settings ---
+    getSettings() { return this.data.settings || {}; }
     updateSettings(updates) {
         this.data.settings = { ...this.data.settings, ...updates };
         this.saveData();
     }
 
-    /**
-     * Resetea todos los datos (PELIGROSO)
-     */
-    resetData() {
-        this.data = this.getDefaultData();
-        this.saveData();
-    }
+    // --- Import/Export ---
+    resetData() { this.data = this.getDefaultData(); this.saveData(); }
+    exportJSON() { return JSON.stringify(this.data, null, 2); }
 
-    /**
-     * Exporta datos como JSON
-     */
-    exportJSON() {
-        return JSON.stringify(this.data, null, 2);
-    }
-
-    /**
-     * Importa datos desde JSON
-     */
     importJSON(jsonString) {
         try {
-            const imported = JSON.parse(jsonString);
-            this.data = { ...this.getDefaultData(), ...imported };
+            this.data = JSON.parse(jsonString);
             this.saveData();
             return true;
         } catch (e) {
-            console.error('Error al importar datos:', e);
+            console.error('Error al importar:', e);
             return false;
         }
     }
 }
 
-// Instancia global
 const financeData = new FinanceData();

@@ -1,233 +1,154 @@
 /**
- * Módulo Ingresos
- * Registro de fuentes de ingreso y seguimiento
+ * Módulo Ingresos - Con edición inline
  */
-
 class Income {
     constructor(container) {
         this.container = container;
-        this.chartInstances = {};
+        this.charts = {};
     }
 
     render() {
         const sources = financeData.getIncomeSources();
-        const totalIncome = sources.reduce((sum, s) => sum + (s.monthlyAmount || 0), 0);
+        const periods = Object.keys(financeData.getPeriods());
+        const totalEstimado = sources.reduce((s, src) => s + (src.estimado || 0), 0);
+        const totalReal = sources.reduce((s, src) => s + (src.real || 0), 0);
 
         this.container.innerHTML = `
-            <div class="income">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
-                    <h1>💰 Ingresos</h1>
-                    <button class="btn btn-primary" onclick="app.currentModule.showAddSourceModal()">
-                        + Nueva Fuente
-                    </button>
-                </div>
+            <div class="flex-between mb-lg">
+                <h1>Ingresos</h1>
+                <button class="btn btn-primary" onclick="app.currentModule.addSource()">+ Nueva Fuente</button>
+            </div>
 
-                <!-- KPI -->
-                <div class="grid grid-2">
-                    <div class="kpi positive">
-                        <div class="kpi-label">Ingreso Mensual Total</div>
-                        <div class="kpi-value">${this.formatCurrency(totalIncome)}</div>
-                    </div>
-                    <div class="kpi">
-                        <div class="kpi-label">Cantidad de Fuentes</div>
-                        <div class="kpi-value">${sources.length}</div>
-                    </div>
+            <div class="grid grid-3">
+                <div class="kpi green">
+                    <div class="kpi-label">Total Estimado</div>
+                    <div class="kpi-value">${fmt(totalEstimado)}</div>
                 </div>
-
-                <!-- Distribución de Ingresos -->
-                <div class="card">
-                    <h3>Fuentes de Ingreso</h3>
-                    <div class="chart-container">
-                        <canvas id="incomeChart"></canvas>
-                    </div>
+                <div class="kpi blue">
+                    <div class="kpi-label">Total Real</div>
+                    <div class="kpi-value">${fmt(totalReal)}</div>
                 </div>
-
-                <!-- Tabla de Fuentes -->
-                <div class="card">
-                    <h3>Detalle de Fuentes</h3>
-                    ${this.renderSourcesTable(sources)}
+                <div class="kpi ${totalReal - totalEstimado >= 0 ? 'green' : 'red'}">
+                    <div class="kpi-label">Diferencia</div>
+                    <div class="kpi-value">${fmt(totalReal - totalEstimado)}</div>
                 </div>
+            </div>
 
-                <!-- Modal para agregar fuente -->
-                <div id="sourceModal" class="modal">
-                    <div class="modal-content">
-                        <div class="modal-header">Nueva Fuente de Ingreso</div>
-                        <form onsubmit="app.currentModule.saveSource(event)">
-                            <div class="form-group">
-                                <label>Nombre de la Fuente *</label>
-                                <input type="text" id="sourceName" placeholder="Ej: Salario principal" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Monto Mensual *</label>
-                                <input type="number" id="sourceAmount" placeholder="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Descripción</label>
-                                <textarea id="sourceDescription" placeholder="Detalles..." rows="3"></textarea>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" onclick="app.currentModule.closeModal()">Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                            </div>
-                        </form>
-                    </div>
+            <div class="card">
+                <div class="card-header"><h3>Fuentes de Ingreso</h3></div>
+                <div class="chart-container"><canvas id="incomeChart"></canvas></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3>Detalle</h3></div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr>
+                            <th>Fuente</th>
+                            <th>Frecuencia</th>
+                            <th class="text-right">Estimado</th>
+                            <th class="text-right">Real</th>
+                            <th>Período</th>
+                            <th class="text-right">Diferencia</th>
+                            <th></th>
+                        </tr></thead>
+                        <tbody>
+                            ${sources.map((src, i) => this.renderRow(src, i, periods)).join('')}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;
 
-        setTimeout(() => {
-            this.renderIncomeChart(sources);
-        }, 100);
+        setTimeout(() => this.renderChart(sources), 50);
     }
 
-    renderIncomeChart(sources) {
-        const ctx = document.getElementById('incomeChart');
-        if (this.chartInstances.income) {
-            this.chartInstances.income.destroy();
+    renderRow(src, idx, periods) {
+        const diff = (src.real || 0) - (src.estimado || 0);
+        return `<tr>
+            <td><input class="inline-input" value="${src.name}" onchange="app.currentModule.onEdit(${idx}, 'name', this.value)"></td>
+            <td>
+                <select class="inline-select" onchange="app.currentModule.onEdit(${idx}, 'frequency', this.value)">
+                    ${FRECUENCIAS.map(f => `<option value="${f}" ${src.frequency === f ? 'selected' : ''}>${f}</option>`).join('')}
+                </select>
+            </td>
+            <td><input class="inline-input text-right" type="number" value="${src.estimado || 0}" onchange="app.currentModule.onEditNum(${idx}, 'estimado', this.value)"></td>
+            <td><input class="inline-input text-right" type="number" value="${src.real || 0}" onchange="app.currentModule.onEditNum(${idx}, 'real', this.value)"></td>
+            <td>
+                <select class="inline-select" onchange="app.currentModule.onEdit(${idx}, 'period', this.value)">
+                    <option value="">—</option>
+                    ${periods.map(p => `<option value="${p}" ${src.period === p ? 'selected' : ''}>${p}</option>`).join('')}
+                </select>
+            </td>
+            <td class="text-right font-bold ${diff >= 0 ? 'text-success' : 'text-danger'}">${fmt(diff)}</td>
+            <td><button class="btn-icon danger" onclick="app.currentModule.deleteSource(${idx})" title="Eliminar">✕</button></td>
+        </tr>`;
+    }
+
+    onEdit(idx, field, value) {
+        const sources = financeData.getIncomeSources();
+        if (sources[idx]) {
+            sources[idx][field] = value;
+            financeData.data.income.sources = sources;
+            financeData.saveData();
+            showToast('Guardado', 'success');
         }
+    }
 
-        const labels = sources.map(s => s.name);
-        const data = sources.map(s => s.monthlyAmount);
-        const colors = [
-            'rgba(16, 185, 129, 0.8)',
-            'rgba(34, 197, 94, 0.8)',
-            'rgba(59, 130, 246, 0.8)',
-            'rgba(139, 92, 246, 0.8)'
-        ];
+    onEditNum(idx, field, value) {
+        const sources = financeData.getIncomeSources();
+        if (sources[idx]) {
+            sources[idx][field] = parseFloat(value) || 0;
+            financeData.data.income.sources = sources;
+            financeData.saveData();
+            this.render();
+            showToast('Guardado', 'success');
+        }
+    }
 
-        this.chartInstances.income = new Chart(ctx, {
+    addSource() {
+        const name = prompt('Nombre de la fuente de ingreso:');
+        if (!name) return;
+        const sources = financeData.getIncomeSources();
+        sources.push({ id: Date.now(), name, frequency: 'mensual', estimado: 0, real: 0, period: '' });
+        financeData.data.income.sources = sources;
+        financeData.saveData();
+        this.render();
+        showToast('Fuente creada', 'success');
+    }
+
+    deleteSource(idx) {
+        if (!confirm('¿Eliminar esta fuente?')) return;
+        const sources = financeData.getIncomeSources();
+        sources.splice(idx, 1);
+        financeData.data.income.sources = sources;
+        financeData.saveData();
+        this.render();
+        showToast('Fuente eliminada', 'warning');
+    }
+
+    renderChart(sources) {
+        const ctx = document.getElementById('incomeChart');
+        if (!ctx) return;
+        if (this.charts.income) this.charts.income.destroy();
+
+        this.charts.income = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels,
-                datasets: [{
-                    label: 'Ingreso Mensual',
-                    data,
-                    backgroundColor: colors.slice(0, data.length),
-                    borderColor: colors.slice(0, data.length).map(c => c.replace('0.8', '1')),
-                    borderWidth: 1
-                }]
+                labels: sources.map(s => s.name),
+                datasets: [
+                    { label: 'Estimado', data: sources.map(s => s.estimado || 0), backgroundColor: 'rgba(16,185,129,0.5)', borderRadius: 4 },
+                    { label: 'Real', data: sources.map(s => s.real || 0), backgroundColor: 'rgba(59,130,246,0.7)', borderRadius: 4 }
+                ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: (value) => this.formatCurrencyShort(value)
-                        }
-                    }
+                    x: { ticks: { color: '#64748b' }, grid: { color: '#334155' } },
+                    y: { beginAtZero: true, ticks: { color: '#64748b', callback: v => fmtShort(v) }, grid: { color: '#334155' } }
                 }
             }
         });
-    }
-
-    renderSourcesTable(sources) {
-        if (sources.length === 0) {
-            return '<p class="text-muted">Sin fuentes de ingreso. Añade una.</p>';
-        }
-
-        let html = '<div class="table-container"><table><thead><tr>';
-        html += '<th>Fuente</th><th class="text-right">Monto Mensual</th><th>% del Total</th><th>Acciones</th>';
-        html += '</tr></thead><tbody>';
-
-        const totalIncome = sources.reduce((sum, s) => sum + (s.monthlyAmount || 0), 0);
-
-        sources.forEach((source, idx) => {
-            const percentage = totalIncome > 0 ? Math.round((source.monthlyAmount / totalIncome) * 100) : 0;
-            html += `<tr>
-                <td><strong>${source.name}</strong></td>
-                <td class="text-right font-bold text-success">${this.formatCurrency(source.monthlyAmount)}</td>
-                <td>${percentage}%</td>
-                <td>
-                    <button class="btn btn-secondary btn-small" onclick="app.currentModule.editSource(${idx})">Editar</button>
-                    <button class="btn btn-danger btn-small" onclick="app.currentModule.deleteSource(${idx})">Eliminar</button>
-                </td>
-            </tr>`;
-        });
-
-        html += '</tbody></table></div>';
-        return html;
-    }
-
-    showAddSourceModal() {
-        document.getElementById('sourceModal').classList.add('active');
-        document.getElementById('sourceName').value = '';
-        document.getElementById('sourceAmount').value = '';
-        document.getElementById('sourceDescription').value = '';
-        this.editingIndex = null;
-    }
-
-    editSource(index) {
-        const source = financeData.getIncomeSources()[index];
-        if (!source) return;
-
-        document.getElementById('sourceModal').classList.add('active');
-        document.getElementById('sourceName').value = source.name;
-        document.getElementById('sourceAmount').value = source.monthlyAmount;
-        document.getElementById('sourceDescription').value = source.description || '';
-        this.editingIndex = index;
-    }
-
-    saveSource(event) {
-        event.preventDefault();
-        const name = document.getElementById('sourceName').value.trim();
-        const amount = parseFloat(document.getElementById('sourceAmount').value);
-        const description = document.getElementById('sourceDescription').value;
-
-        if (!name || !amount) {
-            alert('Completa nombre y monto');
-            return;
-        }
-
-        const sources = financeData.getIncomeSources();
-        const sourceData = { name, monthlyAmount: amount, description };
-
-        if (this.editingIndex !== null && this.editingIndex !== undefined) {
-            sources[this.editingIndex] = { ...sources[this.editingIndex], ...sourceData };
-            this.editingIndex = null;
-        } else {
-            sourceData.id = Date.now();
-            sources.push(sourceData);
-        }
-
-        financeData.data.income.sources = sources;
-        financeData.saveData();
-
-        this.closeModal();
-        this.render();
-    }
-
-    deleteSource(index) {
-        if (!confirm('¿Eliminar esta fuente de ingreso?')) return;
-        const sources = financeData.getIncomeSources();
-        sources.splice(index, 1);
-        financeData.data.income.sources = sources;
-        financeData.saveData();
-        this.render();
-    }
-
-    closeModal() {
-        document.getElementById('sourceModal').classList.remove('active');
-    }
-
-    formatCurrency(value) {
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0
-        }).format(value || 0);
-    }
-
-    formatCurrencyShort(value) {
-        if (value >= 1000000) {
-            return (value / 1000000).toFixed(1) + 'M';
-        } else if (value >= 1000) {
-            return (value / 1000).toFixed(0) + 'K';
-        }
-        return value;
     }
 }

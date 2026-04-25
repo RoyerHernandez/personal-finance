@@ -1,5 +1,5 @@
 /**
- * App Principal - Router, sidebar, toast, orquestación
+ * App Principal - Router, sidebar, toast, theme, orquestacion
  */
 
 /** Toast notifications */
@@ -21,10 +21,38 @@ class FinanceApp {
     }
 
     init() {
+        this.setupTheme();
         this.setupDate();
         this.setupNavigation();
         this.setupSidebar();
         this.loadPage('dashboard');
+    }
+
+    setupTheme() {
+        const saved = localStorage.getItem('finanzas_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+        this.updateThemeIcon(saved);
+
+        const toggle = document.getElementById('themeToggle');
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('finanzas_theme', next);
+                this.updateThemeIcon(next);
+                // Re-render current page to update chart colors
+                if (this.currentModule) this.currentModule.render();
+            });
+        }
+    }
+
+    updateThemeIcon(theme) {
+        const toggle = document.getElementById('themeToggle');
+        if (toggle) {
+            toggle.textContent = theme === 'dark' ? '\u{1F319}' : '\u{2600}\u{FE0F}';
+            toggle.title = theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+        }
     }
 
     setupDate() {
@@ -43,7 +71,6 @@ class FinanceApp {
                 e.preventDefault();
                 const page = link.getAttribute('data-page');
                 this.loadPage(page);
-                // Cerrar sidebar en mobile
                 document.getElementById('sidebar').classList.remove('mobile-open');
                 document.getElementById('sidebarOverlay').classList.remove('active');
             });

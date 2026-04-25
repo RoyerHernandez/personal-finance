@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finanzas Personales</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -14,17 +17,23 @@
         <!-- Sidebar -->
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2>💎 Finanzas</h2>
-                <button class="sidebar-toggle" id="sidebarToggle" title="Colapsar">☰</button>
+                <h2>&#x1F4CE; FINANZAS</h2>
+                <button class="sidebar-toggle" id="sidebarToggle" title="Colapsar">&#9776;</button>
             </div>
             <ul class="nav-menu">
-                <li><a href="#" data-page="dashboard" class="nav-link active"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a></li>
-                <li><a href="#" data-page="periods" class="nav-link"><span class="nav-icon">📅</span><span class="nav-text">Períodos</span></a></li>
-                <li><a href="#" data-page="debts" class="nav-link"><span class="nav-icon">💳</span><span class="nav-text">Deudas y Créditos</span></a></li>
-                <li><a href="#" data-page="expenses" class="nav-link"><span class="nav-icon">🐜</span><span class="nav-text">Gastos Hormiga</span></a></li>
-                <li><a href="#" data-page="income" class="nav-link"><span class="nav-icon">💰</span><span class="nav-text">Ingresos</span></a></li>
-                <li><a href="#" data-page="settings" class="nav-link"><span class="nav-icon">⚙️</span><span class="nav-text">Configuración</span></a></li>
+                <li><a href="#" data-page="dashboard" class="nav-link active"><span class="nav-icon">&#x1F4CA;</span><span class="nav-text">Dashboard</span></a></li>
+                <li><a href="#" data-page="periods" class="nav-link"><span class="nav-icon">&#x1F4C5;</span><span class="nav-text">Periodos</span></a></li>
+                <li><a href="#" data-page="debts" class="nav-link"><span class="nav-icon">&#x1F4B3;</span><span class="nav-text">Deudas y Creditos</span></a></li>
+                <li><a href="#" data-page="expenses" class="nav-link"><span class="nav-icon">&#x1F41C;</span><span class="nav-text">Gastos Hormiga</span></a></li>
+                <li><a href="#" data-page="income" class="nav-link"><span class="nav-icon">&#x1F4B0;</span><span class="nav-text">Ingresos</span></a></li>
+                <li><a href="#" data-page="settings" class="nav-link"><span class="nav-icon">&#x2699;&#xFE0F;</span><span class="nav-text">Configuracion</span></a></li>
             </ul>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="sidebar-footer-name">Royer Hernandez</div>
+                    <div class="sidebar-footer-email">ing.royerhernandez@gmail.com</div>
+                </div>
+            </div>
         </nav>
 
         <!-- Main -->
@@ -32,12 +41,13 @@
             <!-- Topbar -->
             <header class="topbar">
                 <div class="topbar-left">
-                    <button class="btn-icon mobile-menu-btn" id="mobileMenuBtn">☰</button>
+                    <button class="btn-icon mobile-menu-btn" id="mobileMenuBtn">&#9776;</button>
                     <span id="topbarDate"></span>
                 </div>
                 <div class="topbar-right">
-                    <button class="btn btn-secondary btn-small" onclick="financeData.saveData(); showToast('Datos guardados', 'success')">
-                        💾 Guardar
+                    <button class="theme-toggle" id="themeToggle" title="Cambiar tema">&#x1F319;</button>
+                    <button class="btn btn-primary btn-small" onclick="financeData.saveData(); showToast('Datos guardados', 'success')">
+                        Guardar
                     </button>
                 </div>
             </header>

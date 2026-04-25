@@ -105,9 +105,9 @@ class Periods {
                         <span class="section-toggle">▾</span>
                     </div>
                 </div>
-                <div class="section-body" style="padding:0 var(--spacing-sm) var(--spacing-sm)">
+                <div class="section-body" style="padding:0">
                     <div class="table-container">
-                        <table>
+                        <table style="min-width:750px">
                             <thead><tr>
                                 <th>Concepto</th>
                                 <th>Categoría</th>
@@ -142,7 +142,7 @@ class Periods {
         const debtLabel = debt ? `${debt.name}` : '—';
 
         return `<tr data-id="${item.id}">
-            <td><input class="inline-input" value="${item.concept}" onchange="app.currentModule.onEdit(${item.id},'concept',this.value)"></td>
+            <td style="min-width:160px"><input class="inline-input" value="${item.concept}" onchange="app.currentModule.onEdit(${item.id},'concept',this.value)"></td>
             <td>
                 <select class="inline-select" onchange="app.currentModule.onEdit(${item.id},'category',this.value)">
                     ${CATEGORIAS.map(c => `<option value="${c}" ${item.category === c ? 'selected' : ''}>${c}</option>`).join('')}

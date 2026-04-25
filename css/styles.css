@@ -816,7 +816,7 @@ select option { background: var(--bg-surface); }
 .stat-value { font-size: 1.1rem; font-weight: 700; }
 
 /* === Charts === */
-.chart-container { position: relative; height: 260px; }
+.chart-container { position: relative; height: 260px; min-height: 200px; }
 
 /* === Alerts === */
 .alert {
@@ -894,8 +894,40 @@ select option { background: var(--bg-surface); }
     .stats-row { grid-template-columns: repeat(2, 1fr); }
     .topbar { padding: 0 var(--spacing-md); }
     .quick-actions { flex-wrap: nowrap; }
-    .dash-top { padding: 16px; }
-    .dash-bottom { padding: 0 16px 16px; }
+    .dash-top { padding: 16px; gap: 16px; }
+    .dash-bottom { padding: 0 16px 16px; gap: 16px; }
+
+    /* KPI cards: 2 columns on mobile */
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+
+    /* Charts: full width, shorter */
+    .chart-container { height: 220px; }
+
+    /* Period table: ensure horizontal scroll and min-widths */
+    .table-container { -webkit-overflow-scrolling: touch; }
+    .table-container table { min-width: 700px; }
+
+    /* Section body padding */
+    .section-body { padding: 0 12px 12px; }
+
+    /* Smaller KPI text on mobile */
+    .kpi-value { font-size: 1.15rem; }
+    .kpi { padding: 14px 16px; }
+}
+
+@media (max-width: 480px) {
+    .dash-top { padding: 12px; gap: 12px; }
+    .dash-bottom { padding: 0 12px 12px; gap: 12px; }
+    .dash-top-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    h1 { font-size: 1.2rem; }
+    .kpi-value { font-size: 1rem; }
+    .kpi-label { font-size: 0.65rem; }
+    .kpi { padding: 12px; }
+    .quick-action { padding: 8px 12px; font-size: 0.75rem; height: 36px; }
+    .chart-container { height: 200px; }
+    .product-card { padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
+    .product-amount { text-align: left; min-width: auto; }
+    .topbar { height: 48px; }
 }
 
 .mobile-menu-btn { display: none; }

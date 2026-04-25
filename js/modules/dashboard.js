@@ -200,6 +200,8 @@ class Dashboard {
 
         const colors = ['#ef4444','#f59e0b','#3b82f6','#8b5cf6','#ec4899','#10b981','#06b6d4','#f97316','#6366f1','#14b8a6'];
 
+        const isMobile = window.innerWidth < 768;
+
         this.charts.egresos = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -208,7 +210,7 @@ class Dashboard {
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'right', labels: { color: cc.text, padding: 12, font: { size: 11 } } } }
+                plugins: { legend: { position: isMobile ? 'bottom' : 'right', labels: { color: cc.text, padding: 10, font: { size: isMobile ? 10 : 11 } } } }
             }
         });
     }

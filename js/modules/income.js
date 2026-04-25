@@ -1,5 +1,5 @@
 /**
- * Módulo Ingresos - Con edición inline
+ * Módulo Ingresos - KPIs editables y tabla con datos visibles
  */
 class Income {
     constructor(container) {
@@ -12,6 +12,7 @@ class Income {
         const periods = Object.keys(financeData.getPeriods());
         const totalEstimado = sources.reduce((s, src) => s + (src.estimado || 0), 0);
         const totalReal = sources.reduce((s, src) => s + (src.real || 0), 0);
+        const diff = totalReal - totalEstimado;
 
         this.container.innerHTML = `
             <div class="flex-between mb-lg">
@@ -19,7 +20,7 @@ class Income {
                 <button class="btn btn-primary" onclick="app.currentModule.addSource()">+ Nueva Fuente</button>
             </div>
 
-            <div class="grid grid-3">
+            <div class="grid grid-3 mb-md">
                 <div class="kpi green">
                     <div class="kpi-label">Total Estimado</div>
                     <div class="kpi-value">${fmt(totalEstimado)}</div>
@@ -28,34 +29,56 @@ class Income {
                     <div class="kpi-label">Total Real</div>
                     <div class="kpi-value">${fmt(totalReal)}</div>
                 </div>
-                <div class="kpi ${totalReal - totalEstimado >= 0 ? 'green' : 'red'}">
+                <div class="kpi ${diff >= 0 ? 'green' : 'red'}">
                     <div class="kpi-label">Diferencia</div>
-                    <div class="kpi-value">${fmt(totalReal - totalEstimado)}</div>
+                    <div class="kpi-value">${fmt(diff)}</div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header"><h3>Fuentes de Ingreso</h3></div>
-                <div class="chart-container"><canvas id="incomeChart"></canvas></div>
+            <div class="section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>📊 Fuentes de Ingreso</h3>
+                    <span class="section-toggle">▾</span>
+                </div>
+                <div class="section-body">
+                    <div class="chart-container"><canvas id="incomeChart"></canvas></div>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="card-header"><h3>Detalle</h3></div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr>
-                            <th>Fuente</th>
-                            <th>Frecuencia</th>
-                            <th class="text-right">Estimado</th>
-                            <th class="text-right">Real</th>
-                            <th>Período</th>
-                            <th class="text-right">Diferencia</th>
-                            <th></th>
-                        </tr></thead>
-                        <tbody>
-                            ${sources.map((src, i) => this.renderRow(src, i, periods)).join('')}
-                        </tbody>
-                    </table>
+            <div class="section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>💰 Detalle de Fuentes (${sources.length})</h3>
+                    <span class="section-toggle">▾</span>
+                </div>
+                <div class="section-body" style="padding:0 var(--spacing-sm) var(--spacing-sm)">
+                    ${sources.length ? `
+                    <div class="table-container">
+                        <table>
+                            <thead><tr>
+                                <th>Fuente</th>
+                                <th>Frecuencia</th>
+                                <th class="text-right">Estimado</th>
+                                <th class="text-right">Real</th>
+                                <th>Período</th>
+                                <th class="text-right">Diferencia</th>
+                                <th></th>
+                            </tr></thead>
+                            <tbody>
+                                ${sources.map((src, i) => this.renderRow(src, i, periods)).join('')}
+                            </tbody>
+                            <tfoot>
+                                <tr style="font-weight:700;border-top:2px solid var(--border-color)">
+                                    <td colspan="2">Totales</td>
+                                    <td class="text-right text-success">${fmt(totalEstimado)}</td>
+                                    <td class="text-right text-success">${fmt(totalReal)}</td>
+                                    <td></td>
+                                    <td class="text-right ${diff >= 0 ? 'text-success' : 'text-danger'}">${fmt(diff)}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    ` : '<div style="padding:var(--spacing-lg)"><p class="text-muted">Sin fuentes de ingreso. Agrega una.</p></div>'}
                 </div>
             </div>
         `;
@@ -66,16 +89,16 @@ class Income {
     renderRow(src, idx, periods) {
         const diff = (src.real || 0) - (src.estimado || 0);
         return `<tr>
-            <td><input class="inline-input" value="${src.name}" onchange="app.currentModule.onEdit(${idx}, 'name', this.value)"></td>
+            <td><input class="inline-input" value="${src.name}" onchange="app.currentModule.onEdit(${idx},'name',this.value)"></td>
             <td>
-                <select class="inline-select" onchange="app.currentModule.onEdit(${idx}, 'frequency', this.value)">
+                <select class="inline-select" onchange="app.currentModule.onEdit(${idx},'frequency',this.value)">
                     ${FRECUENCIAS.map(f => `<option value="${f}" ${src.frequency === f ? 'selected' : ''}>${f}</option>`).join('')}
                 </select>
             </td>
-            <td><input class="inline-input text-right" type="number" value="${src.estimado || 0}" onchange="app.currentModule.onEditNum(${idx}, 'estimado', this.value)"></td>
-            <td><input class="inline-input text-right" type="number" value="${src.real || 0}" onchange="app.currentModule.onEditNum(${idx}, 'real', this.value)"></td>
+            <td><input class="inline-input text-right" type="number" value="${src.estimado || 0}" onchange="app.currentModule.onEditNum(${idx},'estimado',this.value)"></td>
+            <td><input class="inline-input text-right" type="number" value="${src.real || 0}" onchange="app.currentModule.onEditNum(${idx},'real',this.value)"></td>
             <td>
-                <select class="inline-select" onchange="app.currentModule.onEdit(${idx}, 'period', this.value)">
+                <select class="inline-select" onchange="app.currentModule.onEdit(${idx},'period',this.value)">
                     <option value="">—</option>
                     ${periods.map(p => `<option value="${p}" ${src.period === p ? 'selected' : ''}>${p}</option>`).join('')}
                 </select>
@@ -124,12 +147,12 @@ class Income {
         financeData.data.income.sources = sources;
         financeData.saveData();
         this.render();
-        showToast('Fuente eliminada', 'warning');
+        showToast('Eliminada', 'warning');
     }
 
     renderChart(sources) {
         const ctx = document.getElementById('incomeChart');
-        if (!ctx) return;
+        if (!ctx || !sources.length) return;
         if (this.charts.income) this.charts.income.destroy();
 
         this.charts.income = new Chart(ctx, {
@@ -137,7 +160,7 @@ class Income {
             data: {
                 labels: sources.map(s => s.name),
                 datasets: [
-                    { label: 'Estimado', data: sources.map(s => s.estimado || 0), backgroundColor: 'rgba(16,185,129,0.5)', borderRadius: 4 },
+                    { label: 'Estimado', data: sources.map(s => s.estimado || 0), backgroundColor: 'rgba(16,185,129,0.4)', borderRadius: 4 },
                     { label: 'Real', data: sources.map(s => s.real || 0), backgroundColor: 'rgba(59,130,246,0.7)', borderRadius: 4 }
                 ]
             },

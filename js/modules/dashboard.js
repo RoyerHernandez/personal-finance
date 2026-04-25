@@ -1,5 +1,5 @@
 /**
- * Módulo Dashboard - KPIs, gráficos, resumen
+ * Dashboard - Vista general con diseño fintech
  */
 class Dashboard {
     constructor(container) {
@@ -11,17 +11,46 @@ class Dashboard {
         const s = financeData.getGeneralSummary();
         const debts = financeData.getDebts();
         const periods = financeData.getPeriods();
+        const periodNames = Object.keys(periods);
 
         this.container.innerHTML = `
-            <h1>Dashboard</h1>
+            <div class="flex-between mb-lg">
+                <h1>Resumen Financiero</h1>
+                <span class="text-muted" style="font-size:0.8rem">${new Date().toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}</span>
+            </div>
 
-            <div class="grid grid-4">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a class="quick-action" onclick="app.loadPage('periods')">
+                    <span class="quick-action-icon">📅</span>
+                    Ver Períodos
+                </a>
+                <a class="quick-action" onclick="app.loadPage('debts')">
+                    <span class="quick-action-icon">💳</span>
+                    Mis Deudas
+                </a>
+                <a class="quick-action" onclick="app.loadPage('expenses')">
+                    <span class="quick-action-icon">🐜</span>
+                    Registrar Gasto
+                </a>
+                <a class="quick-action" onclick="app.loadPage('income')">
+                    <span class="quick-action-icon">💰</span>
+                    Ingresos
+                </a>
+                <a class="quick-action" onclick="app.loadPage('settings')">
+                    <span class="quick-action-icon">📤</span>
+                    Exportar
+                </a>
+            </div>
+
+            <!-- KPIs -->
+            <div class="grid grid-4 mb-md">
                 <div class="kpi green">
-                    <div class="kpi-label">Ingresos</div>
+                    <div class="kpi-label">Ingresos del Mes</div>
                     <div class="kpi-value">${fmt(s.totalIncome)}</div>
                 </div>
                 <div class="kpi red">
-                    <div class="kpi-label">Egresos</div>
+                    <div class="kpi-label">Egresos del Mes</div>
                     <div class="kpi-value">${fmt(s.totalExpenses)}</div>
                 </div>
                 <div class="kpi ${s.neto >= 0 ? 'blue' : 'red'}">
@@ -34,31 +63,90 @@ class Dashboard {
                 </div>
             </div>
 
+            <!-- Charts -->
             <div class="grid grid-2">
-                <div class="card">
-                    <div class="card-header"><h3>Distribución de Egresos</h3></div>
-                    <div class="chart-container"><canvas id="chartEgresos"></canvas></div>
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>📊 Distribución de Egresos</h3>
+                        <span class="section-toggle">▾</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="chart-container"><canvas id="chartEgresos"></canvas></div>
+                    </div>
                 </div>
-                <div class="card">
-                    <div class="card-header"><h3>Ingresos vs Egresos por Período</h3></div>
-                    <div class="chart-container"><canvas id="chartPeriodos"></canvas></div>
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>📈 Ingresos vs Egresos</h3>
+                        <span class="section-toggle">▾</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="chart-container"><canvas id="chartFlow"></canvas></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header"><h3>Resumen por Período</h3></div>
-                ${this.renderPeriodsTable(periods)}
+            <!-- Mis Deudas (Bancolombia-style) -->
+            <div class="section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>💳 Mis Deudas (${debts.length})</h3>
+                    <span class="section-toggle">▾</span>
+                </div>
+                <div class="section-body" style="padding:0">
+                    ${debts.map(d => {
+                        const paid = d.initialAmount - d.currentAmount;
+                        const pct = d.initialAmount > 0 ? Math.round((paid / d.initialAmount) * 100) : 0;
+                        const color = pct > 66 ? 'green' : pct > 33 ? 'orange' : 'red';
+                        return `
+                        <div class="product-card">
+                            <div class="product-info">
+                                <div class="product-name">${d.name}</div>
+                                <div class="product-detail">
+                                    Pagado: ${pct}%
+                                    <div class="progress-bar" style="width:100px;display:inline-block;vertical-align:middle;margin-left:8px">
+                                        <div class="progress ${color}" style="width:${pct}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="product-amount">
+                                <div class="product-amount-label">Saldo actual</div>
+                                <div class="product-amount-value text-danger">${fmt(d.currentAmount)}</div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
             </div>
 
-            <div class="card">
-                <div class="card-header"><h3>Top Deudas</h3></div>
-                ${this.renderDebtsTable(debts)}
+            <!-- Períodos -->
+            <div class="section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>📅 Períodos (${periodNames.length})</h3>
+                    <span class="section-toggle">▾</span>
+                </div>
+                <div class="section-body" style="padding:0">
+                    ${periodNames.map(name => {
+                        const c = financeData.calcPeriodo(name);
+                        return `
+                        <div class="product-card" style="cursor:pointer" onclick="app.loadPage('periods')">
+                            <div class="product-info">
+                                <div class="product-name">${name}</div>
+                                <div class="product-detail">
+                                    <span class="badge badge-${periods[name].type || 'mensual'}">${periods[name].type || 'mensual'}</span>
+                                    Ingresos: ${fmt(c.totIngreso)} · Egresos: ${fmt(c.totEgreso)}
+                                </div>
+                            </div>
+                            <div class="product-amount">
+                                <div class="product-amount-label">Flujo neto</div>
+                                <div class="product-amount-value ${c.neto >= 0 ? 'text-success' : 'text-danger'}">${fmt(c.neto)}</div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
             </div>
         `;
 
         setTimeout(() => {
             this.renderEgresosChart(periods);
-            this.renderPeriodosChart(periods);
+            this.renderFlowChart(s);
         }, 50);
     }
 
@@ -67,13 +155,11 @@ class Dashboard {
         if (!ctx) return;
         if (this.charts.egresos) this.charts.egresos.destroy();
 
-        // Agrupar egresos por categoría
         const cats = {};
         Object.values(periods).forEach(p => {
             (p.items || []).forEach(item => {
                 if (item.egreso > 0) {
-                    const cat = item.category || 'Otro';
-                    cats[cat] = (cats[cat] || 0) + item.egreso;
+                    cats[item.category || 'Otro'] = (cats[item.category || 'Otro'] || 0) + item.egreso;
                 }
             });
         });
@@ -88,34 +174,29 @@ class Dashboard {
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12, font: { size: 11 } } }
-                }
+                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 10, font: { size: 10 } } } }
             }
         });
     }
 
-    renderPeriodosChart(periods) {
-        const ctx = document.getElementById('chartPeriodos');
+    renderFlowChart(s) {
+        const ctx = document.getElementById('chartFlow');
         if (!ctx) return;
-        if (this.charts.periodos) this.charts.periodos.destroy();
+        if (this.charts.flow) this.charts.flow.destroy();
 
-        const names = Object.keys(periods);
-        const ingresos = names.map(n => financeData.calcPeriodo(n).totIngreso);
-        const egresos = names.map(n => financeData.calcPeriodo(n).totEgreso);
-
-        this.charts.periodos = new Chart(ctx, {
+        this.charts.flow = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: names,
-                datasets: [
-                    { label: 'Ingresos', data: ingresos, backgroundColor: 'rgba(16,185,129,0.7)', borderRadius: 4 },
-                    { label: 'Egresos', data: egresos, backgroundColor: 'rgba(239,68,68,0.7)', borderRadius: 4 }
-                ]
+                labels: ['Ingresos', 'Egresos', 'Saldo', 'Neto'],
+                datasets: [{
+                    data: [s.totalIncome, s.totalExpenses, s.totalSaldo, s.neto],
+                    backgroundColor: ['rgba(16,185,129,0.7)', 'rgba(239,68,68,0.7)', 'rgba(245,158,11,0.7)', s.neto >= 0 ? 'rgba(59,130,246,0.7)' : 'rgba(239,68,68,0.5)'],
+                    borderRadius: 4
+                }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                plugins: { legend: { display: false } },
                 scales: {
                     x: { ticks: { color: '#64748b' }, grid: { color: '#334155' } },
                     y: { beginAtZero: true, ticks: { color: '#64748b', callback: v => fmtShort(v) }, grid: { color: '#334155' } }
@@ -123,50 +204,9 @@ class Dashboard {
             }
         });
     }
+}
 
-    renderPeriodsTable(periods) {
-        const arr = Object.keys(periods);
-        if (!arr.length) return '<p class="text-muted">Sin períodos configurados</p>';
-
-        let html = '<div class="table-container"><table><thead><tr><th>Período</th><th>Tipo</th><th class="text-right">Ingresos</th><th class="text-right">Egresos</th><th class="text-right">Saldo</th><th class="text-right">Neto</th></tr></thead><tbody>';
-
-        arr.forEach(name => {
-            const p = periods[name];
-            const c = financeData.calcPeriodo(name);
-            html += `<tr>
-                <td><strong>${name}</strong></td>
-                <td><span class="badge badge-${p.type || 'quincena'}">${p.type || 'quincena'}</span></td>
-                <td class="text-right text-success">${fmt(c.totIngreso)}</td>
-                <td class="text-right text-danger">${fmt(c.totEgreso)}</td>
-                <td class="text-right text-warning">${fmt(c.totSaldo)}</td>
-                <td class="text-right font-bold ${c.neto >= 0 ? 'text-success' : 'text-danger'}">${fmt(c.neto)}</td>
-            </tr>`;
-        });
-
-        html += '</tbody></table></div>';
-        return html;
-    }
-
-    renderDebtsTable(debts) {
-        if (!debts.length) return '<p class="text-muted">Sin deudas</p>';
-
-        let html = '<div class="table-container"><table><thead><tr><th>Acreedor</th><th class="text-right">Deuda Inicial</th><th class="text-right">Saldo Actual</th><th class="text-right">Pagado</th><th>Progreso</th></tr></thead><tbody>';
-
-        debts.forEach(d => {
-            const paid = d.initialAmount - d.currentAmount;
-            const pct = d.initialAmount > 0 ? Math.round((paid / d.initialAmount) * 100) : 0;
-            const color = pct > 66 ? 'green' : pct > 33 ? 'orange' : 'red';
-
-            html += `<tr>
-                <td><strong>${d.name}</strong></td>
-                <td class="text-right">${fmt(d.initialAmount)}</td>
-                <td class="text-right">${fmt(d.currentAmount)}</td>
-                <td class="text-right">${pct}%</td>
-                <td><div class="progress-bar"><div class="progress ${color}" style="width:${pct}%"></div></div></td>
-            </tr>`;
-        });
-
-        html += '</tbody></table></div>';
-        return html;
-    }
+/** Toggle collapsible sections */
+function toggleSection(header) {
+    header.parentElement.classList.toggle('collapsed');
 }

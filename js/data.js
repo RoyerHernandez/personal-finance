@@ -46,9 +46,8 @@ class FinanceData {
         return {
             settings: {
                 currency: 'COP',
-                periodType: 'biweekly'
+                periodType: 'monthly'
             },
-            // Deudas centralizadas — única fuente de verdad
             debts: [
                 { id: 1, name: 'Cuota de la Casa', initialAmount: 14749153, currentAmount: 14749153, monthlyPayment: 450000, startDate: '2024-01-01' },
                 { id: 2, name: 'Av Villas', initialAmount: 12757000, currentAmount: 12757000, monthlyPayment: 1740000, startDate: '2024-01-01' },
@@ -58,13 +57,12 @@ class FinanceData {
                 { id: 6, name: 'TC Finandina', initialAmount: 3400000, currentAmount: 3400000, monthlyPayment: 390000, startDate: '2024-01-01' },
                 { id: 7, name: 'TC Cooperativa', initialAmount: 2500000, currentAmount: 2500000, monthlyPayment: 260000, startDate: '2024-01-01' }
             ],
-            // Períodos con items que referencian deudas por debtId
             periods: {
-                'Quincena 1-15': {
-                    name: 'Quincena 1-15',
-                    type: 'quincena',
-                    startDate: '2024-01-01',
-                    endDate: '2024-01-15',
+                'Abril 2026': {
+                    name: 'Abril 2026',
+                    type: 'mensual',
+                    startDate: '2026-04-01',
+                    endDate: '2026-04-30',
                     items: [
                         { id: 101, concept: 'Cuota Natación Emily', category: 'Educación', ingreso: 2200000, egreso: 0, saldo: 0, estado: 'pagado', debtId: null },
                         { id: 102, concept: 'Cuota de la Casa', category: 'Vivienda', ingreso: 0, egreso: 450000, saldo: 0, estado: 'pagado', debtId: 1 },
@@ -72,33 +70,22 @@ class FinanceData {
                         { id: 104, concept: 'Av Villas', category: 'Deuda', ingreso: 0, egreso: 1740000, saldo: 0, estado: 'pagado', debtId: 2 },
                         { id: 105, concept: 'TC Finandina', category: 'Deuda', ingreso: 0, egreso: 390000, saldo: 0, estado: 'pagado', debtId: 6 },
                         { id: 106, concept: 'Tigo', category: 'Servicios', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
-                        { id: 107, concept: 'Almuerzos', category: 'Alimentación', ingreso: 0, egreso: 0, saldo: 200000, estado: 'pendiente', debtId: null },
-                        { id: 108, concept: 'Transportes', category: 'Transporte', ingreso: 0, egreso: 0, saldo: 70000, estado: 'pendiente', debtId: null },
+                        { id: 107, concept: 'Almuerzos', category: 'Alimentación', ingreso: 0, egreso: 0, saldo: 400000, estado: 'pendiente', debtId: null },
+                        { id: 108, concept: 'Transportes', category: 'Transporte', ingreso: 0, egreso: 0, saldo: 140000, estado: 'pendiente', debtId: null },
                         { id: 109, concept: 'Movistar mío', category: 'Servicios', ingreso: 0, egreso: 323000, saldo: 0, estado: 'pagado', debtId: null },
                         { id: 110, concept: 'Movistar Laus', category: 'Servicios', ingreso: 0, egreso: 51000, saldo: 0, estado: 'pagado', debtId: null },
                         { id: 111, concept: 'Universidad Laus', category: 'Educación', ingreso: 0, egreso: 1250000, saldo: 0, estado: 'pagado', debtId: null },
                         { id: 112, concept: 'Cadena', category: 'Otro', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
-                        { id: 113, concept: 'Apartamento', category: 'Vivienda', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
-                        { id: 114, concept: 'Ahorro Littio', category: 'Ahorro', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null }
-                    ]
-                },
-                'Quincena 15-30': {
-                    name: 'Quincena 15-30',
-                    type: 'quincena',
-                    startDate: '2024-01-15',
-                    endDate: '2024-01-30',
-                    items: [
-                        { id: 201, concept: 'Movistar', category: 'Servicios', ingreso: 3000000, egreso: 160000, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 113, concept: 'Apartamento', category: 'Vivienda', ingreso: 0, egreso: 1090000, saldo: 0, estado: 'pagado', debtId: null },
+                        { id: 114, concept: 'Ahorro Littio', category: 'Ahorro', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
+                        { id: 201, concept: 'Movistar (Salario)', category: 'Servicios', ingreso: 3000000, egreso: 160000, saldo: 0, estado: 'pagado', debtId: null },
                         { id: 202, concept: 'Bancolombia TC', category: 'Deuda', ingreso: 0, egreso: 475186, saldo: 0, estado: 'pagado', debtId: 3 },
                         { id: 203, concept: 'TC Cooperativa', category: 'Deuda', ingreso: 0, egreso: 260000, saldo: 0, estado: 'pagado', debtId: 7 },
                         { id: 204, concept: 'Ahorro Programado Cooperativa', category: 'Ahorro', ingreso: 0, egreso: 0, saldo: 71000, estado: 'pendiente', debtId: null },
                         { id: 205, concept: 'Fincomercio', category: 'Deuda', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: 5 },
-                        { id: 206, concept: 'Almuerzos', category: 'Alimentación', ingreso: 0, egreso: 0, saldo: 200000, estado: 'pendiente', debtId: null },
-                        { id: 207, concept: 'Transportes', category: 'Transporte', ingreso: 0, egreso: 0, saldo: 70000, estado: 'pendiente', debtId: null },
                         { id: 208, concept: 'Recibos', category: 'Servicios', ingreso: 0, egreso: 200000, saldo: 0, estado: 'pagado', debtId: null },
                         { id: 209, concept: 'Abuelo', category: 'Otro', ingreso: 0, egreso: 0, saldo: 60000, estado: 'pendiente', debtId: null },
                         { id: 210, concept: 'Skandia', category: 'Seguros', ingreso: 0, egreso: 350000, saldo: 0, estado: 'pagado', debtId: null },
-                        { id: 211, concept: 'Apartamento', category: 'Vivienda', ingreso: 0, egreso: 1090000, saldo: 0, estado: 'pagado', debtId: null },
                         { id: 212, concept: 'Impuesto', category: 'Otro', ingreso: 0, egreso: 300000, saldo: 0, estado: 'pagado', debtId: null }
                     ]
                 }
@@ -106,10 +93,9 @@ class FinanceData {
             expenses: { items: [] },
             income: {
                 sources: [
-                    { id: 1, name: 'Cuota Natación Emily', frequency: 'quincenal', estimado: 2200000, real: 2200000, period: 'Quincena 1-15' },
-                    { id: 2, name: 'Movistar (Salario)', frequency: 'quincenal', estimado: 3000000, real: 3000000, period: 'Quincena 15-30' }
-                ],
-                history: []
+                    { id: 1, name: 'Cuota Natación Emily', frequency: 'mensual', estimado: 2200000, real: 2200000, period: 'Abril 2026' },
+                    { id: 2, name: 'Movistar (Salario)', frequency: 'mensual', estimado: 3000000, real: 3000000, period: 'Abril 2026' }
+                ]
             }
         };
     }
@@ -161,16 +147,10 @@ class FinanceData {
         }
     }
 
-    // --- Deudas (fuente única) ---
+    // --- Deudas ---
     getDebts() { return this.data.debts || []; }
-
-    getTotalDebt() {
-        return this.getDebts().reduce((s, d) => s + (d.currentAmount || 0), 0);
-    }
-
-    getDebtById(id) {
-        return this.getDebts().find(d => d.id === id) || null;
-    }
+    getTotalDebt() { return this.getDebts().reduce((s, d) => s + (d.currentAmount || 0), 0); }
+    getDebtById(id) { return this.getDebts().find(d => d.id === id) || null; }
 
     addDebt(debt) {
         debt.id = Date.now();
@@ -187,7 +167,6 @@ class FinanceData {
 
     deleteDebt(id) {
         this.data.debts = this.data.debts.filter(d => d.id !== id);
-        // Limpiar referencias en períodos
         Object.values(this.data.periods).forEach(p => {
             (p.items || []).forEach(item => {
                 if (item.debtId === id) item.debtId = null;
@@ -217,9 +196,7 @@ class FinanceData {
             totalSaldo += c.totSaldo;
         });
         return {
-            totalIncome,
-            totalExpenses,
-            totalSaldo,
+            totalIncome, totalExpenses, totalSaldo,
             neto: totalIncome - totalExpenses - totalSaldo,
             totalDebt: this.getTotalDebt()
         };
@@ -227,7 +204,6 @@ class FinanceData {
 
     // --- Gastos hormiga ---
     getExpenses() { return this.data.expenses?.items || []; }
-
     addExpense(expense) {
         if (!this.data.expenses) this.data.expenses = {};
         if (!this.data.expenses.items) this.data.expenses.items = [];
@@ -239,7 +215,6 @@ class FinanceData {
 
     // --- Ingresos ---
     getIncomeSources() { return this.data.income?.sources || []; }
-    getIncomeHistory() { return this.data.income?.history || []; }
 
     // --- Settings ---
     getSettings() { return this.data.settings || {}; }
@@ -251,16 +226,9 @@ class FinanceData {
     // --- Import/Export ---
     resetData() { this.data = this.getDefaultData(); this.saveData(); }
     exportJSON() { return JSON.stringify(this.data, null, 2); }
-
     importJSON(jsonString) {
-        try {
-            this.data = JSON.parse(jsonString);
-            this.saveData();
-            return true;
-        } catch (e) {
-            console.error('Error al importar:', e);
-            return false;
-        }
+        try { this.data = JSON.parse(jsonString); this.saveData(); return true; }
+        catch (e) { return false; }
     }
 }
 

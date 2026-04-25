@@ -1,5 +1,5 @@
 /**
- * Módulo Deudas y Créditos - Fuente única con edición inline
+ * Módulo Deudas y Créditos - Estilo producto financiero
  */
 class Debts {
     constructor(container) {
@@ -10,7 +10,8 @@ class Debts {
     render() {
         const debts = financeData.getDebts();
         const totalDebt = financeData.getTotalDebt();
-        const totalPaid = debts.reduce((s, d) => s + (d.initialAmount - d.currentAmount), 0);
+        const totalInitial = debts.reduce((s, d) => s + (d.initialAmount || 0), 0);
+        const totalPaid = totalInitial - totalDebt;
 
         this.container.innerHTML = `
             <div class="flex-between mb-lg">
@@ -18,9 +19,9 @@ class Debts {
                 <button class="btn btn-primary" onclick="app.currentModule.addDebt()">+ Nueva Deuda</button>
             </div>
 
-            <div class="grid grid-3">
+            <div class="grid grid-3 mb-md">
                 <div class="kpi orange">
-                    <div class="kpi-label">Deuda Total Actual</div>
+                    <div class="kpi-label">Deuda Total</div>
                     <div class="kpi-value">${fmt(totalDebt)}</div>
                 </div>
                 <div class="kpi green">
@@ -28,32 +29,28 @@ class Debts {
                     <div class="kpi-value">${fmt(totalPaid)}</div>
                 </div>
                 <div class="kpi blue">
-                    <div class="kpi-label">Número de Deudas</div>
+                    <div class="kpi-label"># Deudas</div>
                     <div class="kpi-value">${debts.length}</div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header"><h3>Distribución de Deudas</h3></div>
-                <div class="chart-container"><canvas id="debtDistChart"></canvas></div>
+            <div class="section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>📊 Distribución</h3>
+                    <span class="section-toggle">▾</span>
+                </div>
+                <div class="section-body">
+                    <div class="chart-container"><canvas id="debtChart"></canvas></div>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="card-header"><h3>Detalle de Deudas</h3></div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr>
-                            <th>Acreedor</th>
-                            <th class="text-right">Valor Inicial</th>
-                            <th class="text-right">Saldo Actual</th>
-                            <th class="text-right">Pagado</th>
-                            <th>Progreso</th>
-                            <th></th>
-                        </tr></thead>
-                        <tbody>
-                            ${debts.map(d => this.renderDebtRow(d)).join('')}
-                        </tbody>
-                    </table>
+            <div class="section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>💳 Mis Obligaciones (${debts.length})</h3>
+                    <span class="section-toggle">▾</span>
+                </div>
+                <div class="section-body" style="padding:0">
+                    ${debts.map(d => this.renderDebtCard(d)).join('')}
                 </div>
             </div>
         `;
@@ -61,19 +58,46 @@ class Debts {
         setTimeout(() => this.renderChart(debts), 50);
     }
 
-    renderDebtRow(d) {
+    renderDebtCard(d) {
         const paid = d.initialAmount - d.currentAmount;
         const pct = d.initialAmount > 0 ? Math.round((paid / d.initialAmount) * 100) : 0;
         const color = pct > 66 ? 'green' : pct > 33 ? 'orange' : 'red';
 
-        return `<tr data-id="${d.id}">
-            <td><input class="inline-input" value="${d.name}" onchange="app.currentModule.onEdit(${d.id}, 'name', this.value)"></td>
-            <td><input class="inline-input text-right" type="number" value="${d.initialAmount}" onchange="app.currentModule.onEditNum(${d.id}, 'initialAmount', this.value)"></td>
-            <td><input class="inline-input text-right" type="number" value="${d.currentAmount}" onchange="app.currentModule.onEditNum(${d.id}, 'currentAmount', this.value)"></td>
-            <td class="text-right">${pct}%</td>
-            <td style="min-width:120px"><div class="progress-bar"><div class="progress ${color}" style="width:${pct}%"></div></div></td>
-            <td><button class="btn-icon danger" onclick="app.currentModule.deleteDebt(${d.id})" title="Eliminar">✕</button></td>
-        </tr>`;
+        return `
+        <div class="product-card" style="flex-wrap:wrap;gap:var(--spacing-sm)">
+            <div class="product-info" style="min-width:180px">
+                <div class="product-name">
+                    <input class="inline-input" value="${d.name}" style="font-weight:600;padding:2px 4px"
+                        onchange="app.currentModule.onEdit(${d.id},'name',this.value)">
+                </div>
+                <div class="product-detail" style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                    <span>${pct}% pagado</span>
+                    <div class="progress-bar" style="width:80px">
+                        <div class="progress ${color}" style="width:${pct}%"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:var(--spacing-lg);align-items:center;flex-wrap:wrap">
+                <div style="text-align:center">
+                    <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase">Inicial</div>
+                    <input class="inline-input text-center" type="number" value="${d.initialAmount}" style="width:130px;font-weight:600;font-size:0.85rem"
+                        onchange="app.currentModule.onEditNum(${d.id},'initialAmount',this.value)">
+                </div>
+                <div style="text-align:center">
+                    <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase">Saldo actual</div>
+                    <input class="inline-input text-center text-danger" type="number" value="${d.currentAmount}" style="width:130px;font-weight:700;font-size:0.85rem"
+                        onchange="app.currentModule.onEditNum(${d.id},'currentAmount',this.value)">
+                </div>
+                <div style="text-align:center">
+                    <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase">Cuota mensual</div>
+                    <input class="inline-input text-center" type="number" value="${d.monthlyPayment || 0}" style="width:130px;font-weight:600;font-size:0.85rem"
+                        onchange="app.currentModule.onEditNum(${d.id},'monthlyPayment',this.value)">
+                </div>
+            </div>
+            <div class="product-actions">
+                <button class="btn-icon danger" onclick="app.currentModule.deleteDebt(${d.id})" title="Eliminar">✕</button>
+            </div>
+        </div>`;
     }
 
     onEdit(id, field, value) {
@@ -92,30 +116,25 @@ class Debts {
         if (!name) return;
         const amount = parseFloat(prompt('Valor inicial:'));
         if (!amount || isNaN(amount)) return;
-
         financeData.addDebt({
-            name,
-            initialAmount: amount,
-            currentAmount: amount,
-            monthlyPayment: 0,
-            startDate: new Date().toISOString().split('T')[0]
+            name, initialAmount: amount, currentAmount: amount,
+            monthlyPayment: 0, startDate: new Date().toISOString().split('T')[0]
         });
         this.render();
         showToast('Deuda creada', 'success');
     }
 
     deleteDebt(id) {
-        if (!confirm('¿Eliminar esta deuda? Se limpiarán las referencias en períodos.')) return;
+        if (!confirm('¿Eliminar esta deuda?')) return;
         financeData.deleteDebt(id);
         this.render();
         showToast('Deuda eliminada', 'warning');
     }
 
     renderChart(debts) {
-        const ctx = document.getElementById('debtDistChart');
+        const ctx = document.getElementById('debtChart');
         if (!ctx) return;
         if (this.charts.dist) this.charts.dist.destroy();
-
         const colors = ['#ef4444','#f97316','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#f59e0b'];
 
         this.charts.dist = new Chart(ctx, {
@@ -135,7 +154,7 @@ class Debts {
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { ticks: { color: '#64748b', callback: v => fmtShort(v) }, grid: { color: '#334155' } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    y: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } }
                 }
             }
         });

@@ -1,6 +1,126 @@
 /**
- * App Principal - Router, sidebar, toast, theme, orquestacion
+ * App Principal - Router, sidebar, toast, theme, tooltip guide, orquestacion
  */
+
+/**
+ * Tooltip Guide Engine
+ * Usage: Guide.start('key', [ { target: '#selector', text: '...', arrow: 'top' }, ... ])
+ * Shows one tooltip at a time anchored to target elements. Click "Entendido" to advance.
+ * Only shows once per key (stored in localStorage).
+ */
+const Guide = {
+    _overlay: null,
+    _tooltip: null,
+    _steps: [],
+    _current: 0,
+    _key: '',
+    _prevTarget: null,
+
+    isDone(key) {
+        return !!localStorage.getItem('guide_' + key);
+    },
+
+    start(key, steps) {
+        if (this.isDone(key) || !steps.length) return;
+        this._key = key;
+        this._steps = steps;
+        this._current = 0;
+        this._createOverlay();
+        this._show();
+    },
+
+    _createOverlay() {
+        this.dismiss();
+        this._overlay = document.createElement('div');
+        this._overlay.className = 'guide-overlay';
+        this._overlay.addEventListener('click', () => this._advance());
+        document.body.appendChild(this._overlay);
+    },
+
+    _show() {
+        if (this._current >= this._steps.length) { this._finish(); return; }
+        const step = this._steps[this._current];
+        // Un-highlight previous
+        if (this._prevTarget) this._prevTarget.classList.remove('guide-target-highlight');
+        // Remove old tooltip
+        if (this._tooltip) this._tooltip.remove();
+
+        const target = document.querySelector(step.target);
+        if (!target) { this._current++; this._show(); return; }
+
+        target.classList.add('guide-target-highlight');
+        this._prevTarget = target;
+
+        const arrow = step.arrow || 'top';
+        const total = this._steps.length;
+
+        this._tooltip = document.createElement('div');
+        this._tooltip.className = `guide-tooltip arrow-${arrow}`;
+        this._tooltip.innerHTML = `
+            <div class="guide-tooltip-step">Paso ${this._current + 1} de ${total}</div>
+            <div class="guide-tooltip-text">${step.text}</div>
+            <div class="guide-tooltip-actions">
+                <button class="guide-tooltip-skip" onclick="Guide.dismiss()">Saltar guia</button>
+                <button class="guide-tooltip-btn" onclick="Guide._advance()">
+                    ${this._current >= total - 1 ? 'Finalizar' : 'Entendido'}
+                </button>
+            </div>
+        `;
+        document.body.appendChild(this._tooltip);
+
+        // Position tooltip relative to target
+        requestAnimationFrame(() => this._position(target, arrow));
+    },
+
+    _position(target, arrow) {
+        const tr = target.getBoundingClientRect();
+        const tt = this._tooltip.getBoundingClientRect();
+        let top, left;
+        const gap = 12;
+        const margin = 12;
+
+        if (arrow === 'top') {
+            top = tr.bottom + gap;
+            left = tr.left + tr.width / 2 - tt.width / 2;
+        } else if (arrow === 'bottom') {
+            top = tr.top - tt.height - gap;
+            left = tr.left + tr.width / 2 - tt.width / 2;
+        } else if (arrow === 'left') {
+            top = tr.top + tr.height / 2 - tt.height / 2;
+            left = tr.right + gap;
+        } else {
+            top = tr.top + tr.height / 2 - tt.height / 2;
+            left = tr.left - tt.width - gap;
+        }
+
+        // Keep within viewport
+        left = Math.max(margin, Math.min(left, window.innerWidth - tt.width - margin));
+        top = Math.max(margin, Math.min(top, window.innerHeight - tt.height - margin));
+
+        this._tooltip.style.top = top + 'px';
+        this._tooltip.style.left = left + 'px';
+    },
+
+    _advance() {
+        this._current++;
+        this._show();
+    },
+
+    _finish() {
+        localStorage.setItem('guide_' + this._key, '1');
+        this.dismiss();
+    },
+
+    dismiss() {
+        if (this._prevTarget) this._prevTarget.classList.remove('guide-target-highlight');
+        if (this._tooltip) this._tooltip.remove();
+        if (this._overlay) this._overlay.remove();
+        this._tooltip = null;
+        this._overlay = null;
+        this._prevTarget = null;
+        if (this._key) localStorage.setItem('guide_' + this._key, '1');
+    }
+};
 
 /** Toast notifications */
 function showToast(msg, type = 'info') {

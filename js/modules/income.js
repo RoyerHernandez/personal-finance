@@ -1,11 +1,10 @@
 /**
- * Modulo Ingresos - Con guia interactiva de primera carga
+ * Modulo Ingresos - Con guia tooltip interactiva
  */
 class Income {
     constructor(container) {
         this.container = container;
         this.charts = {};
-        this.guideStep = 0;
     }
 
     render() {
@@ -14,7 +13,6 @@ class Income {
         const totalEstimado = sources.reduce((s, src) => s + (src.estimado || 0), 0);
         const totalReal = sources.reduce((s, src) => s + (src.real || 0), 0);
         const diff = totalReal - totalEstimado;
-        const showGuide = !localStorage.getItem('finanzas_guide_income_done');
 
         this.container.innerHTML = `
             <div class="page-content">
@@ -22,30 +20,6 @@ class Income {
                     <h1>Ingresos</h1>
                     <button class="btn btn-primary" id="btnAddSource" onclick="app.currentModule.addSource()">+ Nueva Fuente</button>
                 </div>
-
-                ${showGuide ? `
-                <div class="onboarding" id="incomeGuide">
-                    <div class="onboarding-title">
-                        <span class="material-symbols-rounded">school</span>
-                        Como agregar tus ingresos
-                    </div>
-                    <ol class="onboarding-steps" id="guideSteps">
-                        <li data-step="0">Haz clic en <strong>"+ Nueva Fuente"</strong> arriba y escribe el nombre de tu ingreso (ej: <em>Salario Movistar</em>, <em>Freelance</em>, <em>Arriendo</em>)</li>
-                        <li data-step="1">En la columna <strong>Frecuencia</strong>, selecciona cada cuanto recibes ese ingreso: quincenal, mensual, semanal, etc.</li>
-                        <li data-step="2">En <strong>Estimado</strong> escribe cuanto esperas recibir (ej: tu salario bruto). Este es tu presupuesto planificado.</li>
-                        <li data-step="3">En <strong>Real</strong> escribe cuanto recibiste realmente. La <strong>Diferencia</strong> se calcula sola: <span style="color:var(--success)">verde</span> si recibiste mas, <span style="color:var(--danger)">rojo</span> si fue menos.</li>
-                        <li data-step="4">En <strong>Periodo</strong> asocia este ingreso al periodo correspondiente (ej: <em>Abril 2026</em>). Esto actualiza el resumen del Dashboard automaticamente.</li>
-                        <li data-step="5">Repite para cada fuente de ingreso. Puedes editar cualquier campo directamente en la tabla.</li>
-                    </ol>
-                    <div class="onboarding-nav">
-                        <span class="onboarding-progress" id="guideProgress">Paso 1 de 6</span>
-                        <div style="display:flex;gap:8px">
-                            <button class="onboarding-dismiss" onclick="app.currentModule.dismissGuide()">Saltar guia</button>
-                            <button class="onboarding-next" id="guideNextBtn" onclick="app.currentModule.nextGuideStep()">Siguiente</button>
-                        </div>
-                    </div>
-                </div>
-                ` : ''}
 
                 <div class="grid grid-3 mb-md">
                     <div class="kpi green">
@@ -82,7 +56,7 @@ class Income {
                     <div class="section-body" style="padding:0">
                         ${sources.length ? `
                         <div class="table-container">
-                            <table style="min-width:600px">
+                            <table class="income-table" style="min-width:600px">
                                 <thead><tr>
                                     <th>Fuente</th>
                                     <th>Frecuencia</th>
@@ -118,55 +92,20 @@ class Income {
                 requestAnimationFrame(() => this.renderChart(sources));
             });
         }
-        if (!localStorage.getItem('finanzas_guide_income_done')) {
-            this.updateGuideUI();
-        }
+        this.startGuide();
     }
 
-    updateGuideUI() {
-        const steps = document.querySelectorAll('#guideSteps li');
-        if (!steps.length) return;
-        steps.forEach((li, i) => {
-            li.classList.remove('active', 'done');
-            if (i < this.guideStep) li.classList.add('done');
-            else if (i === this.guideStep) li.classList.add('active');
+    startGuide() {
+        requestAnimationFrame(() => {
+            Guide.start('income', [
+                { target: '#btnAddSource', text: 'Haz clic en <strong>"+ Nueva Fuente"</strong> para agregar un ingreso (ej: <em>Salario</em>, <em>Freelance</em>, <em>Arriendo</em>)', arrow: 'top' },
+                { target: '.income-table thead th:nth-child(2)', text: 'En <strong>Frecuencia</strong> selecciona cada cuanto recibes ese ingreso: quincenal, mensual, semanal, etc.', arrow: 'top' },
+                { target: '.income-table thead th:nth-child(3)', text: 'En <strong>Estimado</strong> escribe cuanto esperas recibir (ej: tu salario bruto). Es tu presupuesto planificado.', arrow: 'top' },
+                { target: '.income-table thead th:nth-child(4)', text: 'En <strong>Real</strong> escribe cuanto recibiste. La diferencia se calcula sola: verde si fue mas, rojo si fue menos.', arrow: 'top' },
+                { target: '.income-table thead th:nth-child(5)', text: 'En <strong>Periodo</strong> asocia el ingreso al mes correspondiente. Esto actualiza el Dashboard automaticamente.', arrow: 'top' },
+                { target: '.kpi.green', text: 'Aqui veras el <strong>resumen total</strong> de tus ingresos. Puedes editar cualquier campo directamente en la tabla.', arrow: 'top' }
+            ]);
         });
-        const progress = document.getElementById('guideProgress');
-        if (progress) progress.textContent = `Paso ${this.guideStep + 1} de ${steps.length}`;
-        const nextBtn = document.getElementById('guideNextBtn');
-        if (nextBtn) {
-            nextBtn.textContent = this.guideStep >= steps.length - 1 ? 'Finalizar' : 'Siguiente';
-        }
-        // Highlight relevant UI element
-        this.highlightGuideTarget();
-    }
-
-    highlightGuideTarget() {
-        // Remove previous highlights
-        document.querySelectorAll('.guide-highlight').forEach(el => el.classList.remove('guide-highlight'));
-        const btn = document.getElementById('btnAddSource');
-        if (this.guideStep === 0 && btn) {
-            btn.classList.add('guide-highlight');
-        }
-    }
-
-    nextGuideStep() {
-        const totalSteps = document.querySelectorAll('#guideSteps li').length;
-        this.guideStep++;
-        if (this.guideStep >= totalSteps) {
-            this.dismissGuide();
-            return;
-        }
-        this.updateGuideUI();
-    }
-
-    dismissGuide() {
-        localStorage.setItem('finanzas_guide_income_done', '1');
-        this.guideStep = 0;
-        document.querySelectorAll('.guide-highlight').forEach(el => el.classList.remove('guide-highlight'));
-        const el = document.getElementById('incomeGuide');
-        if (el) el.style.transition = 'opacity 0.3s';
-        if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
     }
 
     renderRow(src, idx, periods) {

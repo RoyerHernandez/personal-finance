@@ -861,110 +861,92 @@ select option { background: var(--bg-surface); }
 }
 
 /* === Onboarding guide === */
-.onboarding {
-    background: var(--primary-glow);
-    border: 1px solid var(--primary);
-    border-radius: var(--radius-lg);
-    padding: 24px;
-    margin-bottom: var(--spacing-lg);
+/* === Tooltip guide system === */
+.guide-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9998;
+    transition: opacity 0.3s;
 }
-.onboarding-title {
-    font-size: 1rem;
+.guide-tooltip {
+    position: fixed;
+    z-index: 9999;
+    background: var(--bg-section);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    max-width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: guideIn 0.3s ease-out;
+}
+@keyframes guideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.guide-tooltip::before {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    background: var(--bg-section);
+    border-top: 1px solid var(--accent);
+    border-left: 1px solid var(--accent);
+    transform: rotate(45deg);
+}
+.guide-tooltip.arrow-top::before    { top: -7px; left: 24px; }
+.guide-tooltip.arrow-bottom::before { bottom: -7px; left: 24px; transform: rotate(225deg); }
+.guide-tooltip.arrow-left::before   { left: -7px; top: 16px; transform: rotate(-45deg); }
+.guide-tooltip.arrow-right::before  { right: -7px; top: 16px; transform: rotate(135deg); }
+.guide-tooltip-step {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 0.7rem;
     font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 16px;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    margin-bottom: 8px;
+}
+.guide-tooltip-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+.guide-tooltip-text strong { color: var(--text-primary); }
+.guide-tooltip-actions {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 8px;
 }
-.onboarding-steps {
-    list-style: none;
-    counter-reset: step;
-}
-.onboarding-steps li {
-    counter-increment: step;
-    padding: 12px 0 12px 44px;
-    position: relative;
-    font-size: 0.88rem;
-    color: var(--text-muted);
-    border-bottom: 1px solid var(--border-color);
-    opacity: 0.5;
-    transition: opacity 0.3s, color 0.3s;
-    pointer-events: none;
-}
-.onboarding-steps li.active {
-    opacity: 1;
-    color: var(--text-secondary);
-    pointer-events: auto;
-}
-.onboarding-steps li.done {
-    opacity: 0.7;
-    color: var(--success);
-}
-.onboarding-steps li:last-child { border-bottom: none; }
-.onboarding-steps li::before {
-    content: counter(step);
-    position: absolute;
-    left: 0;
-    top: 12px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--border-color);
-    color: var(--text-muted);
-    font-weight: 700;
-    font-size: 0.78rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.3s, color 0.3s;
-}
-.onboarding-steps li.active::before {
-    background: var(--accent);
-    color: white;
-    box-shadow: 0 0 0 4px rgba(255,132,0,0.2);
-}
-.onboarding-steps li.done::before {
-    content: '\2713';
-    background: var(--success);
-    color: white;
-}
-.onboarding-steps li strong { color: var(--text-primary); }
-.onboarding-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 16px;
-    gap: 12px;
-}
-.onboarding-nav .onboarding-progress {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-}
-.onboarding-dismiss {
+.guide-tooltip-skip {
     background: none;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 8px 20px;
-    border-radius: var(--radius-pill);
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.78rem;
     cursor: pointer;
-    font-size: 0.82rem;
-    font-weight: 600;
-    transition: var(--transition);
+    padding: 4px 0;
 }
-.onboarding-dismiss:hover { background: var(--accent); color: white; }
-.onboarding-next {
+.guide-tooltip-skip:hover { color: var(--text-secondary); }
+.guide-tooltip-btn {
     background: var(--accent);
     border: none;
     color: white;
-    padding: 8px 24px;
+    padding: 6px 18px;
     border-radius: var(--radius-pill);
     cursor: pointer;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 600;
     transition: var(--transition);
 }
-.onboarding-next:hover { opacity: 0.85; }
+.guide-tooltip-btn:hover { opacity: 0.85; }
+.guide-target-highlight {
+    position: relative;
+    z-index: 9999;
+    border-radius: var(--radius);
+    box-shadow: 0 0 0 4px rgba(255,132,0,0.4), 0 0 20px rgba(255,132,0,0.15);
+}
 
 /* === Status badges === */
 .status-badge {
@@ -998,16 +980,6 @@ select option { background: var(--bg-surface); }
 .status-select.pendiente { color: #fbbf24; background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.3); }
 .status-select.vencido { color: #ef4444; background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
 
-/* === Guide highlight pulse === */
-.guide-highlight {
-    animation: guidePulse 1.5s ease-in-out infinite;
-    position: relative;
-    z-index: 2;
-}
-@keyframes guidePulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255,132,0,0.5); }
-    50% { box-shadow: 0 0 0 8px rgba(255,132,0,0); }
-}
 
 /* === File upload area === */
 .file-upload {

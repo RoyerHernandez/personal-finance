@@ -106,6 +106,18 @@ class Expenses {
         requestAnimationFrame(() => {
             requestAnimationFrame(() => this.renderChart(expenses));
         });
+        this.startGuide();
+    }
+
+    startGuide() {
+        requestAnimationFrame(() => {
+            Guide.start('expenses', [
+                { target: '.btn.btn-primary[onclick*="showAddModal"]', text: 'Registra un <strong>gasto hormiga</strong>: esos gastos pequenos del dia a dia que se acumulan sin darte cuenta.', arrow: 'top' },
+                { target: '.kpi.red', text: 'Aqui ves <strong>cuanto llevas gastado</strong> este mes en gastos hormiga.', arrow: 'top' },
+                { target: '.kpi.blue', text: 'Tu <strong>meta mensual</strong> de gastos. Intenta mantenerte por debajo para ahorrar mas.', arrow: 'top' },
+                { target: '.progress-bar', text: 'La <strong>barra de progreso</strong> muestra que porcentaje de tu meta has consumido. Verde = bien, rojo = excedido.', arrow: 'top' }
+            ]);
+        });
     }
 
     renderTable(expenses) {

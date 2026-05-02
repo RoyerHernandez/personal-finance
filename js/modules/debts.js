@@ -60,6 +60,18 @@ class Debts {
         requestAnimationFrame(() => {
             requestAnimationFrame(() => this.renderChart(debts));
         });
+        this.startGuide();
+    }
+
+    startGuide() {
+        requestAnimationFrame(() => {
+            Guide.start('debts', [
+                { target: '.btn.btn-primary[onclick*="addDebt"]', text: 'Haz clic aqui para agregar una <strong>nueva deuda</strong>: nombre del acreedor y valor inicial.', arrow: 'top' },
+                { target: '.product-card:first-child .product-info', text: 'Cada tarjeta muestra una deuda. Puedes <strong>editar el nombre</strong> directamente haciendo clic.', arrow: 'top' },
+                { target: '.product-card:first-child input[type="number"]', text: 'Edita el <strong>valor inicial, saldo actual y cuota mensual</strong> directamente. Los cambios se guardan solos.', arrow: 'top' },
+                { target: '.kpi.orange', text: 'Aqui ves tu <strong>deuda total actual</strong>. La barra de progreso muestra cuanto has pagado de cada deuda.', arrow: 'top' }
+            ]);
+        });
     }
 
     renderDebtCard(d) {

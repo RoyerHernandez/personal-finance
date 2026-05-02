@@ -72,6 +72,19 @@ class Periods {
                 this.render();
             });
         }
+        this.startGuide();
+    }
+
+    startGuide() {
+        requestAnimationFrame(() => {
+            Guide.start('periods', [
+                { target: '#periodSelect', text: 'Selecciona el <strong>periodo</strong> que quieres revisar. Cada periodo agrupa tus movimientos por quincena o mes.', arrow: 'top' },
+                { target: '.btn.btn-primary[onclick*="showCreateModal"]', text: 'Crea un <strong>nuevo periodo</strong> con nombre, tipo (mensual/quincenal) y rango de fechas.', arrow: 'top' },
+                { target: '.btn.btn-primary.btn-small[onclick*="addItem"]', text: 'Agrega items al periodo: conceptos como <em>Almuerzos</em>, <em>Transporte</em>, <em>Arriendo</em>, etc.', arrow: 'top' },
+                { target: '.table-container table thead', text: 'Edita cada campo directamente en la tabla: <strong>concepto, categoria, montos y estado</strong>. Los cambios se guardan automaticamente.', arrow: 'top' },
+                { target: '.stats-row', text: 'Aqui ves el <strong>resumen del periodo</strong>: ingresos, egresos, saldo disponible y flujo neto.', arrow: 'bottom' }
+            ]);
+        });
     }
 
     renderPeriodDetail(name) {

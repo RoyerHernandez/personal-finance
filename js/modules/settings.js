@@ -102,6 +102,19 @@ class Settings {
             </div>
         `;
         this.setupFileUpload();
+        this.startGuide();
+    }
+
+    startGuide() {
+        requestAnimationFrame(() => {
+            Guide.start('settings', [
+                { target: '#currency', text: 'Selecciona la <strong>moneda</strong> en la que manejas tus finanzas.', arrow: 'top' },
+                { target: '#periodType', text: 'Elige como organizas tus periodos: <strong>mensual, quincenal o personalizado</strong>.', arrow: 'top' },
+                { target: '.btn-group', text: 'Descarga un <strong>respaldo</strong> de tus datos en JSON o CSV para guardarlos en tu computador.', arrow: 'top' },
+                { target: '#fileUploadArea', text: 'Sube un <strong>archivo JSON</strong> para restaurar tus datos. Puedes arrastrarlo o seleccionarlo.', arrow: 'top' },
+                { target: '.btn.btn-danger', text: '<strong>Zona de peligro:</strong> esto borra TODOS tus datos. Usalo solo si quieres empezar de cero.', arrow: 'top' }
+            ]);
+        });
     }
 
     setupFileUpload() {

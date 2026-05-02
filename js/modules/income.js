@@ -1,10 +1,11 @@
 /**
- * Modulo Ingresos - Con guia de primera carga
+ * Modulo Ingresos - Con guia interactiva de primera carga
  */
 class Income {
     constructor(container) {
         this.container = container;
         this.charts = {};
+        this.guideStep = 0;
     }
 
     render() {
@@ -19,7 +20,7 @@ class Income {
             <div class="page-content">
                 <div class="flex-between mb-lg">
                     <h1>Ingresos</h1>
-                    <button class="btn btn-primary" onclick="app.currentModule.addSource()">+ Nueva Fuente</button>
+                    <button class="btn btn-primary" id="btnAddSource" onclick="app.currentModule.addSource()">+ Nueva Fuente</button>
                 </div>
 
                 ${showGuide ? `
@@ -28,15 +29,21 @@ class Income {
                         <span class="material-symbols-rounded">school</span>
                         Como agregar tus ingresos
                     </div>
-                    <ol class="onboarding-steps">
-                        <li>Haz clic en <strong>"+ Nueva Fuente"</strong> y escribe el nombre de tu ingreso (ej: <em>Salario Movistar</em>, <em>Freelance</em>, <em>Arriendo</em>)</li>
-                        <li>En la columna <strong>Frecuencia</strong>, selecciona cada cuanto recibes ese ingreso: quincenal, mensual, semanal, etc.</li>
-                        <li>En <strong>Estimado</strong> escribe cuanto esperas recibir (ej: tu salario bruto). Este es tu presupuesto planificado.</li>
-                        <li>En <strong>Real</strong> escribe cuanto recibiste realmente. La <strong>Diferencia</strong> se calcula sola: verde si recibiste mas, rojo si fue menos.</li>
-                        <li>En <strong>Periodo</strong> asocia este ingreso al periodo correspondiente (ej: <em>Abril 2026</em>). Esto actualiza el resumen del Dashboard automaticamente.</li>
-                        <li>Repite para cada fuente de ingreso. Puedes editar cualquier campo directamente en la tabla.</li>
+                    <ol class="onboarding-steps" id="guideSteps">
+                        <li data-step="0">Haz clic en <strong>"+ Nueva Fuente"</strong> arriba y escribe el nombre de tu ingreso (ej: <em>Salario Movistar</em>, <em>Freelance</em>, <em>Arriendo</em>)</li>
+                        <li data-step="1">En la columna <strong>Frecuencia</strong>, selecciona cada cuanto recibes ese ingreso: quincenal, mensual, semanal, etc.</li>
+                        <li data-step="2">En <strong>Estimado</strong> escribe cuanto esperas recibir (ej: tu salario bruto). Este es tu presupuesto planificado.</li>
+                        <li data-step="3">En <strong>Real</strong> escribe cuanto recibiste realmente. La <strong>Diferencia</strong> se calcula sola: <span style="color:var(--success)">verde</span> si recibiste mas, <span style="color:var(--danger)">rojo</span> si fue menos.</li>
+                        <li data-step="4">En <strong>Periodo</strong> asocia este ingreso al periodo correspondiente (ej: <em>Abril 2026</em>). Esto actualiza el resumen del Dashboard automaticamente.</li>
+                        <li data-step="5">Repite para cada fuente de ingreso. Puedes editar cualquier campo directamente en la tabla.</li>
                     </ol>
-                    <button class="onboarding-dismiss" onclick="app.currentModule.dismissGuide()">Entendido, no mostrar de nuevo</button>
+                    <div class="onboarding-nav">
+                        <span class="onboarding-progress" id="guideProgress">Paso 1 de 6</span>
+                        <div style="display:flex;gap:8px">
+                            <button class="onboarding-dismiss" onclick="app.currentModule.dismissGuide()">Saltar guia</button>
+                            <button class="onboarding-next" id="guideNextBtn" onclick="app.currentModule.nextGuideStep()">Siguiente</button>
+                        </div>
+                    </div>
                 </div>
                 ` : ''}
 
@@ -111,12 +118,55 @@ class Income {
                 requestAnimationFrame(() => this.renderChart(sources));
             });
         }
+        if (!localStorage.getItem('finanzas_guide_income_done')) {
+            this.updateGuideUI();
+        }
+    }
+
+    updateGuideUI() {
+        const steps = document.querySelectorAll('#guideSteps li');
+        if (!steps.length) return;
+        steps.forEach((li, i) => {
+            li.classList.remove('active', 'done');
+            if (i < this.guideStep) li.classList.add('done');
+            else if (i === this.guideStep) li.classList.add('active');
+        });
+        const progress = document.getElementById('guideProgress');
+        if (progress) progress.textContent = `Paso ${this.guideStep + 1} de ${steps.length}`;
+        const nextBtn = document.getElementById('guideNextBtn');
+        if (nextBtn) {
+            nextBtn.textContent = this.guideStep >= steps.length - 1 ? 'Finalizar' : 'Siguiente';
+        }
+        // Highlight relevant UI element
+        this.highlightGuideTarget();
+    }
+
+    highlightGuideTarget() {
+        // Remove previous highlights
+        document.querySelectorAll('.guide-highlight').forEach(el => el.classList.remove('guide-highlight'));
+        const btn = document.getElementById('btnAddSource');
+        if (this.guideStep === 0 && btn) {
+            btn.classList.add('guide-highlight');
+        }
+    }
+
+    nextGuideStep() {
+        const totalSteps = document.querySelectorAll('#guideSteps li').length;
+        this.guideStep++;
+        if (this.guideStep >= totalSteps) {
+            this.dismissGuide();
+            return;
+        }
+        this.updateGuideUI();
     }
 
     dismissGuide() {
         localStorage.setItem('finanzas_guide_income_done', '1');
+        this.guideStep = 0;
+        document.querySelectorAll('.guide-highlight').forEach(el => el.classList.remove('guide-highlight'));
         const el = document.getElementById('incomeGuide');
-        if (el) el.remove();
+        if (el) el.style.transition = 'opacity 0.3s';
+        if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
     }
 
     renderRow(src, idx, periods) {

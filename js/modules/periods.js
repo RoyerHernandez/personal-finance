@@ -154,12 +154,12 @@ class Periods {
             <td><input class="inline-input text-right" type="number" value="${item.ingreso || 0}" onchange="app.currentModule.onEditNum(${item.id},'ingreso',this.value)"></td>
             <td><input class="inline-input text-right" type="number" value="${item.egreso || 0}" onchange="app.currentModule.onEditNum(${item.id},'egreso',this.value)"></td>
             <td>
-                <select class="inline-select" onchange="app.currentModule.onEdit(${item.id},'estado',this.value)">
-                    ${ESTADOS.map(e => `<option value="${e}" ${item.estado === e ? 'selected' : ''}>${e}</option>`).join('')}
+                <select class="inline-select status-select ${item.estado || 'pendiente'}" onchange="app.currentModule.onEdit(${item.id},'estado',this.value);this.className='inline-select status-select '+this.value">
+                    ${ESTADOS.map(e => `<option value="${e}" ${item.estado === e ? 'selected' : ''}>${e === 'pagado' ? '\u2713 Pagado' : e === 'pendiente' ? '\u26A0 Pendiente' : '\u2717 Vencido'}</option>`).join('')}
                 </select>
             </td>
             <td style="font-size:0.72rem;color:var(--text-muted);max-width:100px;overflow:hidden;text-overflow:ellipsis" title="${debtLabel}">${debtLabel}</td>
-            <td><button class="btn-icon danger" onclick="app.currentModule.deleteItem(${item.id})" title="Eliminar">✕</button></td>
+            <td><button class="btn-icon danger" onclick="app.currentModule.deleteItem(${item.id})" title="Eliminar"><span class="material-symbols-rounded" style="font-size:18px">close</span></button></td>
         </tr>`;
     }
 

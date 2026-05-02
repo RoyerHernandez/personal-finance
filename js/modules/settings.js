@@ -58,10 +58,18 @@ class Settings {
                     </div>
 
                     <h3 class="mt-md">Importar</h3>
+                    <div class="file-upload" id="fileUploadArea">
+                        <span class="material-symbols-rounded" style="font-size:36px;color:var(--accent);margin-bottom:8px">upload_file</span>
+                        <p style="margin:0 0 4px"><strong>Arrastra tu archivo JSON aqui</strong></p>
+                        <p class="text-muted" style="font-size:0.8rem;margin:0 0 8px">o haz clic para seleccionar</p>
+                        <input type="file" id="importFile" accept=".json" style="display:none">
+                        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('importFile').click()">Seleccionar archivo</button>
+                        <p id="fileName" class="text-muted" style="font-size:0.75rem;margin-top:8px"></p>
+                    </div>
+                    <p class="text-muted" style="font-size:0.8rem;margin:12px 0 8px">O pega el JSON directamente:</p>
                     <form onsubmit="app.currentModule.importData(event)">
                         <div class="form-group">
-                            <label>Pega el JSON exportado</label>
-                            <textarea id="importData" rows="4" placeholder="{ ... }" style="font-family:monospace;font-size:0.8rem"></textarea>
+                            <textarea id="importData" rows="3" placeholder="{ ... }" style="font-family:monospace;font-size:0.8rem"></textarea>
                         </div>
                         <button type="submit" class="btn btn-secondary">Importar</button>
                     </form>
@@ -93,6 +101,48 @@ class Settings {
             </div>
             </div>
         `;
+        this.setupFileUpload();
+    }
+
+    setupFileUpload() {
+        const area = document.getElementById('fileUploadArea');
+        const input = document.getElementById('importFile');
+        if (!area || !input) return;
+
+        input.addEventListener('change', (e) => {
+            if (e.target.files.length) this.handleFile(e.target.files[0]);
+        });
+
+        area.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            area.classList.add('dragover');
+        });
+        area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+        area.addEventListener('drop', (e) => {
+            e.preventDefault();
+            area.classList.remove('dragover');
+            if (e.dataTransfer.files.length) this.handleFile(e.dataTransfer.files[0]);
+        });
+    }
+
+    handleFile(file) {
+        if (!file.name.endsWith('.json')) {
+            showToast('Solo archivos .json', 'error');
+            return;
+        }
+        document.getElementById('fileName').textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const json = e.target.result;
+            if (!confirm('¿Importar datos desde ' + file.name + '? Esto reemplazará tus datos actuales.')) return;
+            if (financeData.importJSON(json)) {
+                showToast('Importado correctamente', 'success');
+                setTimeout(() => location.reload(), 500);
+            } else {
+                showToast('JSON inválido', 'error');
+            }
+        };
+        reader.readAsText(file);
     }
 
     saveSettings(event) {

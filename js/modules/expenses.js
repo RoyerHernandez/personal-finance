@@ -50,11 +50,13 @@ class Expenses {
 
             <div class="section">
                 <div class="section-header" onclick="toggleSection(this)">
-                    <h3>📊 Por Categoría</h3>
-                    <span class="section-toggle">▾</span>
+                    <h3>&#x1F4CA; Por Categoria</h3>
+                    <span class="section-toggle">&#x25BE;</span>
                 </div>
                 <div class="section-body">
-                    <div class="chart-container"><canvas id="expChart" width="400" height="260"></canvas></div>
+                    ${expenses.length
+                        ? '<div class="chart-container"><canvas id="expChart" width="400" height="260"></canvas></div>'
+                        : '<p class="text-muted" style="padding:24px 0;text-align:center">Registra un gasto para ver la grafica</p>'}
                 </div>
             </div>
 

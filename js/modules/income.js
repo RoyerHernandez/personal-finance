@@ -1,5 +1,5 @@
 /**
- * Modulo Ingresos - Simplificado y sincronizado con el resumen
+ * Modulo Ingresos - Con guia de primera carga
  */
 class Income {
     constructor(container) {
@@ -13,6 +13,7 @@ class Income {
         const totalEstimado = sources.reduce((s, src) => s + (src.estimado || 0), 0);
         const totalReal = sources.reduce((s, src) => s + (src.real || 0), 0);
         const diff = totalReal - totalEstimado;
+        const showGuide = !localStorage.getItem('finanzas_guide_income_done');
 
         this.container.innerHTML = `
             <div class="page-content">
@@ -20,6 +21,24 @@ class Income {
                     <h1>Ingresos</h1>
                     <button class="btn btn-primary" onclick="app.currentModule.addSource()">+ Nueva Fuente</button>
                 </div>
+
+                ${showGuide ? `
+                <div class="onboarding" id="incomeGuide">
+                    <div class="onboarding-title">
+                        <span class="material-symbols-rounded">school</span>
+                        Como agregar tus ingresos
+                    </div>
+                    <ol class="onboarding-steps">
+                        <li>Haz clic en <strong>"+ Nueva Fuente"</strong> y escribe el nombre de tu ingreso (ej: <em>Salario Movistar</em>, <em>Freelance</em>, <em>Arriendo</em>)</li>
+                        <li>En la columna <strong>Frecuencia</strong>, selecciona cada cuanto recibes ese ingreso: quincenal, mensual, semanal, etc.</li>
+                        <li>En <strong>Estimado</strong> escribe cuanto esperas recibir (ej: tu salario bruto). Este es tu presupuesto planificado.</li>
+                        <li>En <strong>Real</strong> escribe cuanto recibiste realmente. La <strong>Diferencia</strong> se calcula sola: verde si recibiste mas, rojo si fue menos.</li>
+                        <li>En <strong>Periodo</strong> asocia este ingreso al periodo correspondiente (ej: <em>Abril 2026</em>). Esto actualiza el resumen del Dashboard automaticamente.</li>
+                        <li>Repite para cada fuente de ingreso. Puedes editar cualquier campo directamente en la tabla.</li>
+                    </ol>
+                    <button class="onboarding-dismiss" onclick="app.currentModule.dismissGuide()">Entendido, no mostrar de nuevo</button>
+                </div>
+                ` : ''}
 
                 <div class="grid grid-3 mb-md">
                     <div class="kpi green">
@@ -38,19 +57,19 @@ class Income {
 
                 <div class="section mb-md">
                     <div class="section-header" onclick="toggleSection(this)">
-                        <h3>&#x1F4CA; Fuentes de Ingreso</h3>
+                        <h3><span class="material-symbols-rounded" style="font-size:20px;vertical-align:middle">bar_chart</span> Fuentes de Ingreso</h3>
                         <span class="section-toggle">&#x25BE;</span>
                     </div>
                     <div class="section-body">
-                        <div class="chart-container">
-                            <canvas id="incomeChart" width="400" height="260"></canvas>
-                        </div>
+                        ${sources.length
+                            ? '<div class="chart-container"><canvas id="incomeChart" width="400" height="260"></canvas></div>'
+                            : '<p class="text-muted" style="padding:24px 0;text-align:center">Agrega una fuente de ingreso para ver la grafica</p>'}
                     </div>
                 </div>
 
                 <div class="section">
                     <div class="section-header" onclick="toggleSection(this)">
-                        <h3>&#x1F4B0; Detalle de Fuentes (${sources.length})</h3>
+                        <h3><span class="material-symbols-rounded" style="font-size:20px;vertical-align:middle">account_balance</span> Detalle de Fuentes (${sources.length})</h3>
                         <span class="section-toggle">&#x25BE;</span>
                     </div>
                     <div class="section-body" style="padding:0">
@@ -81,15 +100,23 @@ class Income {
                                 </tfoot>
                             </table>
                         </div>
-                        ` : '<div style="padding:var(--spacing-lg)"><p class="text-muted">Sin fuentes de ingreso. Agrega una.</p></div>'}
+                        ` : '<div style="padding:var(--spacing-lg)"><p class="text-muted">Sin fuentes de ingreso. Haz clic en "+ Nueva Fuente" para empezar.</p></div>'}
                     </div>
                 </div>
             </div>
         `;
 
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => this.renderChart(sources));
-        });
+        if (sources.length) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => this.renderChart(sources));
+            });
+        }
+    }
+
+    dismissGuide() {
+        localStorage.setItem('finanzas_guide_income_done', '1');
+        const el = document.getElementById('incomeGuide');
+        if (el) el.remove();
     }
 
     renderRow(src, idx, periods) {
@@ -110,7 +137,7 @@ class Income {
                 </select>
             </td>
             <td class="text-right font-bold ${diff >= 0 ? 'text-success' : 'text-danger'}">${fmt(diff)}</td>
-            <td><button class="btn-icon danger" onclick="app.currentModule.deleteSource(${idx})" title="Eliminar">&#x2715;</button></td>
+            <td><button class="btn-icon danger" onclick="app.currentModule.deleteSource(${idx})" title="Eliminar"><span class="material-symbols-rounded" style="font-size:18px">close</span></button></td>
         </tr>`;
     }
 

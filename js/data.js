@@ -180,7 +180,13 @@ class FinanceData {
         const p = this.getPeriod(periodName);
         if (!p) return { totIngreso: 0, totEgreso: 0, totSaldo: 0, neto: 0 };
         const items = p.items || [];
-        const totIngreso = items.reduce((s, i) => s + (i.ingreso || 0), 0);
+
+        // Income: use income sources linked to this period (real), fallback to period items
+        const sources = this.getIncomeSources().filter(s => s.period === periodName);
+        const totIngreso = sources.length > 0
+            ? sources.reduce((s, src) => s + (src.real || 0), 0)
+            : items.reduce((s, i) => s + (i.ingreso || 0), 0);
+
         const totEgreso = items.reduce((s, i) => s + (i.egreso || 0), 0);
         const totSaldo = items.reduce((s, i) => s + (i.saldo || 0), 0);
         return { totIngreso, totEgreso, totSaldo, neto: totIngreso - totEgreso - totSaldo };

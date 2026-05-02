@@ -109,11 +109,12 @@ body {
     line-height: 1.6;
     overflow: hidden;
     height: 100vh;
+    height: 100dvh;
     transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* === Layout === */
-.app-layout { display: flex; height: 100vh; }
+.app-layout { display: flex; height: 100vh; height: 100dvh; }
 
 /* === Sidebar === */
 .sidebar {
@@ -236,13 +237,16 @@ body {
 /* === Topbar === */
 .topbar {
     height: var(--topbar-height);
+    padding-top: env(safe-area-inset-top, 0px);
     background: var(--bg-surface);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 32px;
+    padding-left: 32px;
+    padding-right: 32px;
     flex-shrink: 0;
+    z-index: 50;
 }
 
 .topbar-left {
@@ -339,7 +343,7 @@ h3 { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-botto
     background: var(--bg-section);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    overflow: hidden;
+    overflow: visible;
     transition: var(--transition);
     box-shadow: var(--shadow-card);
 }
@@ -816,7 +820,16 @@ select option { background: var(--bg-surface); }
 .stat-value { font-size: 1.1rem; font-weight: 700; }
 
 /* === Charts === */
-.chart-container { position: relative; height: 260px; min-height: 200px; }
+.chart-container {
+    position: relative;
+    height: 260px;
+    min-height: 200px;
+    width: 100%;
+}
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
 
 /* === Alerts === */
 .alert {
@@ -830,6 +843,11 @@ select option { background: var(--bg-surface); }
 .alert-success { background: var(--success-bg); color: var(--success); border-color: var(--success); }
 .alert-warning { background: var(--warning-bg); color: var(--warning); border-color: var(--warning); }
 .alert-danger { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
+
+/* === Page content wrapper === */
+.page-content {
+    padding: 24px 32px;
+}
 
 /* === Debt total badge === */
 .debt-total-badge {
@@ -874,8 +892,10 @@ select option { background: var(--bg-surface); }
         left: -100%;
         top: 0;
         height: 100vh;
+        height: 100dvh;
         z-index: 200;
         transition: left 0.3s ease;
+        padding-top: env(safe-area-inset-top, 0px);
     }
     .sidebar.mobile-open { left: 0; }
 
@@ -890,20 +910,26 @@ select option { background: var(--bg-surface); }
 
     .mobile-menu-btn { display: flex !important; }
 
-    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .topbar {
+        padding-left: var(--spacing-md);
+        padding-right: var(--spacing-md);
+        min-height: var(--topbar-height);
+        height: auto;
+    }
+
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    /* KPI cards: 2 columns on mobile */
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
     .stats-row { grid-template-columns: repeat(2, 1fr); }
-    .topbar { padding: 0 var(--spacing-md); }
+
     .quick-actions { flex-wrap: nowrap; }
     .dash-top { padding: 16px; gap: 16px; }
     .dash-bottom { padding: 0 16px 16px; gap: 16px; }
 
-    /* KPI cards: 2 columns on mobile */
-    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    /* Charts: full width */
+    .chart-container { height: 240px; min-height: 240px; }
 
-    /* Charts: full width, shorter */
-    .chart-container { height: 220px; }
-
-    /* Period table: ensure horizontal scroll and min-widths */
+    /* Period table: ensure horizontal scroll */
     .table-container { -webkit-overflow-scrolling: touch; }
     .table-container table { min-width: 700px; }
 
@@ -913,6 +939,12 @@ select option { background: var(--bg-surface); }
     /* Smaller KPI text on mobile */
     .kpi-value { font-size: 1.15rem; }
     .kpi { padding: 14px 16px; }
+
+    /* Pages with padding */
+    .page-content { padding: 16px; }
+
+    /* Flex-between stack on small screens */
+    .flex-between { flex-wrap: wrap; gap: 8px; }
 }
 
 @media (max-width: 480px) {
@@ -924,10 +956,9 @@ select option { background: var(--bg-surface); }
     .kpi-label { font-size: 0.65rem; }
     .kpi { padding: 12px; }
     .quick-action { padding: 8px 12px; font-size: 0.75rem; height: 36px; }
-    .chart-container { height: 200px; }
+    .chart-container { height: 220px; min-height: 220px; }
     .product-card { padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
     .product-amount { text-align: left; min-width: auto; }
-    .topbar { height: 48px; }
 }
 
 .mobile-menu-btn { display: none; }

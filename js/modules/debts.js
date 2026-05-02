@@ -14,8 +14,9 @@ class Debts {
         const totalPaid = totalInitial - totalDebt;
 
         this.container.innerHTML = `
+            <div class="page-content">
             <div class="flex-between mb-lg">
-                <h1>Deudas y Créditos</h1>
+                <h1>Deudas y Creditos</h1>
                 <button class="btn btn-primary" onclick="app.currentModule.addDebt()">+ Nueva Deuda</button>
             </div>
 
@@ -40,7 +41,7 @@ class Debts {
                     <span class="section-toggle">▾</span>
                 </div>
                 <div class="section-body">
-                    <div class="chart-container"><canvas id="debtChart"></canvas></div>
+                    <div class="chart-container"><canvas id="debtChart" width="400" height="260"></canvas></div>
                 </div>
             </div>
 
@@ -53,9 +54,12 @@ class Debts {
                     ${debts.map(d => this.renderDebtCard(d)).join('')}
                 </div>
             </div>
+            </div>
         `;
 
-        setTimeout(() => this.renderChart(debts), 50);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => this.renderChart(debts));
+        });
     }
 
     renderDebtCard(d) {
@@ -132,12 +136,16 @@ class Debts {
     }
 
     renderChart(debts) {
-        const ctx = document.getElementById('debtChart');
-        if (!ctx) return;
+        const el = document.getElementById('debtChart');
+        if (!el || !debts.length) return;
         if (this.charts.dist) this.charts.dist.destroy();
+
+        const style = getComputedStyle(document.documentElement);
+        const gridColor = style.getPropertyValue('--chart-grid').trim() || '#2E2E2E';
+        const textColor = style.getPropertyValue('--chart-text').trim() || '#71717a';
         const colors = ['#ef4444','#f97316','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#f59e0b'];
 
-        this.charts.dist = new Chart(ctx, {
+        this.charts.dist = new Chart(el, {
             type: 'bar',
             data: {
                 labels: debts.map(d => d.name),
@@ -153,8 +161,8 @@ class Debts {
                 indexAxis: 'y',
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#64748b', callback: v => fmtShort(v) }, grid: { color: '#334155' } },
-                    y: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } }
+                    x: { ticks: { color: textColor, callback: v => fmtShort(v) }, grid: { color: gridColor } },
+                    y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
                 }
             }
         });

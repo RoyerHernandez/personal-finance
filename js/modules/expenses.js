@@ -14,6 +14,7 @@ class Expenses {
         const pct = Math.min(Math.round((total / monthlyTarget) * 100), 100);
 
         this.container.innerHTML = `
+            <div class="page-content">
             <div class="flex-between mb-lg">
                 <h1>Gastos Hormiga</h1>
                 <button class="btn btn-primary" onclick="app.currentModule.showAddModal()">+ Nuevo Gasto</button>
@@ -53,7 +54,7 @@ class Expenses {
                     <span class="section-toggle">▾</span>
                 </div>
                 <div class="section-body">
-                    <div class="chart-container"><canvas id="expChart"></canvas></div>
+                    <div class="chart-container"><canvas id="expChart" width="400" height="260"></canvas></div>
                 </div>
             </div>
 
@@ -67,6 +68,7 @@ class Expenses {
                 </div>
             </div>
 
+            </div>
             <div id="expenseModal" class="modal">
                 <div class="modal-content">
                     <div class="modal-header">Nuevo Gasto</div>
@@ -99,7 +101,9 @@ class Expenses {
             </div>
         `;
 
-        setTimeout(() => this.renderChart(expenses), 50);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => this.renderChart(expenses));
+        });
     }
 
     renderTable(expenses) {
@@ -147,21 +151,26 @@ class Expenses {
     }
 
     renderChart(expenses) {
-        const ctx = document.getElementById('expChart');
-        if (!ctx || !expenses.length) return;
+        const el = document.getElementById('expChart');
+        if (!el || !expenses.length) return;
         if (this.charts.exp) this.charts.exp.destroy();
+
+        const style = getComputedStyle(document.documentElement);
+        const textColor = style.getPropertyValue('--chart-text').trim() || '#71717a';
+        const borderColor = style.getPropertyValue('--bg-section').trim() || '#1A1A1A';
+
         const cats = {};
         expenses.forEach(e => { cats[e.category || 'Otro'] = (cats[e.category || 'Otro'] || 0) + (e.amount || 0); });
         const colors = ['#3b82f6','#8b5cf6','#ec4899','#f97316','#10b981','#06b6d4','#ef4444','#f59e0b'];
-        this.charts.exp = new Chart(ctx, {
+        this.charts.exp = new Chart(el, {
             type: 'doughnut',
             data: {
                 labels: Object.keys(cats),
-                datasets: [{ data: Object.values(cats), backgroundColor: colors.slice(0, Object.keys(cats).length), borderColor: '#1e293b', borderWidth: 2 }]
+                datasets: [{ data: Object.values(cats), backgroundColor: colors.slice(0, Object.keys(cats).length), borderColor: borderColor, borderWidth: 2 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 10 } } }
+                plugins: { legend: { position: 'bottom', labels: { color: textColor, padding: 10 } } }
             }
         });
     }

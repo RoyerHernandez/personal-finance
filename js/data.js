@@ -187,14 +187,27 @@ class FinanceData {
     }
 
     getGeneralSummary() {
+        // Income from income sources (authoritative)
+        const sources = this.getIncomeSources();
+        let totalIncome = sources.reduce((s, src) => s + (src.real || 0), 0);
+
+        // Expenses and saldo from periods
         const periods = Object.keys(this.data.periods);
-        let totalIncome = 0, totalExpenses = 0, totalSaldo = 0;
+        let totalExpenses = 0, totalSaldo = 0;
         periods.forEach(name => {
             const c = this.calcPeriodo(name);
-            totalIncome += c.totIngreso;
             totalExpenses += c.totEgreso;
             totalSaldo += c.totSaldo;
         });
+
+        // If no income sources exist, fall back to period income
+        if (sources.length === 0) {
+            periods.forEach(name => {
+                const c = this.calcPeriodo(name);
+                totalIncome += c.totIngreso;
+            });
+        }
+
         return {
             totalIncome, totalExpenses, totalSaldo,
             neto: totalIncome - totalExpenses - totalSaldo,

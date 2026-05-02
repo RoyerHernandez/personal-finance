@@ -22,7 +22,6 @@ class Dashboard {
                     <h1>Resumen Financiero</h1>
                     <div class="dash-top-header-right">
                         <span class="date-badge">${capitalDate}</span>
-                        <button class="btn btn-primary btn-small" onclick="app.loadPage('settings')">Exportar</button>
                     </div>
                 </div>
 
@@ -31,12 +30,10 @@ class Dashboard {
                     <div class="kpi green">
                         <div class="kpi-label">Ingresos del Mes</div>
                         <div class="kpi-value">${fmt(s.totalIncome)}</div>
-                        <div class="kpi-change" style="color:var(--success)">+8.2%</div>
                     </div>
                     <div class="kpi red">
                         <div class="kpi-label">Egresos del Mes</div>
                         <div class="kpi-value">${fmt(s.totalExpenses)}</div>
-                        <div class="kpi-change" style="color:var(--danger)">Alto</div>
                     </div>
                     <div class="kpi ${s.neto >= 0 ? 'blue' : 'red'}">
                         <div class="kpi-label">Flujo Neto</div>
@@ -45,7 +42,7 @@ class Dashboard {
                     <div class="kpi orange">
                         <div class="kpi-label">Deuda Total</div>
                         <div class="kpi-value">${fmt(s.totalDebt)}</div>
-                        <div class="kpi-change">7 deudas</div>
+                        <div class="kpi-change">${debts.length} deudas</div>
                     </div>
                 </div>
 
@@ -84,7 +81,9 @@ class Dashboard {
                             <span class="section-toggle">&#x25BE;</span>
                         </div>
                         <div class="section-body">
-                            <div class="chart-container"><canvas id="chartEgresos"></canvas></div>
+                            <div class="chart-container">
+                                <canvas id="chartEgresos" width="400" height="260"></canvas>
+                            </div>
                         </div>
                     </div>
                     <div class="section">
@@ -93,7 +92,9 @@ class Dashboard {
                             <span class="section-toggle">&#x25BE;</span>
                         </div>
                         <div class="section-body">
-                            <div class="chart-container"><canvas id="chartFlow"></canvas></div>
+                            <div class="chart-container">
+                                <canvas id="chartFlow" width="400" height="260"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -139,6 +140,7 @@ class Dashboard {
                         <span class="section-toggle">&#x25BE;</span>
                     </div>
                     <div class="section-body" style="padding:0">
+                        <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
@@ -163,29 +165,33 @@ class Dashboard {
                                 }).join('')}
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
 
-        setTimeout(() => {
-            this.renderEgresosChart(periods);
-            this.renderFlowChart(s);
-        }, 50);
+        // Use requestAnimationFrame for reliable chart rendering on all devices
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.renderEgresosChart(periods);
+                this.renderFlowChart(s);
+            });
+        });
     }
 
     getChartColors() {
         const style = getComputedStyle(document.documentElement);
         return {
-            grid: style.getPropertyValue('--chart-grid').trim(),
-            text: style.getPropertyValue('--chart-text').trim(),
-            border: style.getPropertyValue('--chart-border').trim()
+            grid: style.getPropertyValue('--chart-grid').trim() || '#2E2E2E',
+            text: style.getPropertyValue('--chart-text').trim() || '#71717a',
+            border: style.getPropertyValue('--bg-section').trim() || '#1A1A1A'
         };
     }
 
     renderEgresosChart(periods) {
-        const ctx = document.getElementById('chartEgresos');
-        if (!ctx) return;
+        const el = document.getElementById('chartEgresos');
+        if (!el) return;
         if (this.charts.egresos) this.charts.egresos.destroy();
 
         const cc = this.getChartColors();
@@ -198,42 +204,60 @@ class Dashboard {
             });
         });
 
-        const colors = ['#ef4444','#f59e0b','#3b82f6','#8b5cf6','#ec4899','#10b981','#06b6d4','#f97316','#6366f1','#14b8a6'];
+        if (Object.keys(cats).length === 0) return;
 
+        const colors = ['#ef4444','#f59e0b','#3b82f6','#8b5cf6','#ec4899','#10b981','#06b6d4','#f97316','#6366f1','#14b8a6'];
         const isMobile = window.innerWidth < 768;
 
-        this.charts.egresos = new Chart(ctx, {
+        this.charts.egresos = new Chart(el, {
             type: 'doughnut',
             data: {
                 labels: Object.keys(cats),
-                datasets: [{ data: Object.values(cats), backgroundColor: colors.slice(0, Object.keys(cats).length), borderColor: cc.border, borderWidth: 2 }]
+                datasets: [{
+                    data: Object.values(cats),
+                    backgroundColor: colors.slice(0, Object.keys(cats).length),
+                    borderColor: cc.border,
+                    borderWidth: 2
+                }]
             },
             options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: isMobile ? 'bottom' : 'right', labels: { color: cc.text, padding: 10, font: { size: isMobile ? 10 : 11 } } } }
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: isMobile ? 'bottom' : 'right',
+                        labels: { color: cc.text, padding: 10, font: { size: isMobile ? 10 : 11 } }
+                    }
+                }
             }
         });
     }
 
     renderFlowChart(s) {
-        const ctx = document.getElementById('chartFlow');
-        if (!ctx) return;
+        const el = document.getElementById('chartFlow');
+        if (!el) return;
         if (this.charts.flow) this.charts.flow.destroy();
 
         const cc = this.getChartColors();
 
-        this.charts.flow = new Chart(ctx, {
+        this.charts.flow = new Chart(el, {
             type: 'bar',
             data: {
                 labels: ['Ingresos', 'Egresos', 'Saldo', 'Neto'],
                 datasets: [{
                     data: [s.totalIncome, s.totalExpenses, s.totalSaldo, Math.abs(s.neto)],
-                    backgroundColor: ['rgba(16,185,129,0.8)', 'rgba(239,68,68,0.8)', 'rgba(245,158,11,0.8)', s.neto >= 0 ? 'rgba(59,130,246,0.8)' : 'rgba(239,68,68,0.5)'],
+                    backgroundColor: [
+                        'rgba(16,185,129,0.8)',
+                        'rgba(239,68,68,0.8)',
+                        'rgba(245,158,11,0.8)',
+                        s.neto >= 0 ? 'rgba(59,130,246,0.8)' : 'rgba(239,68,68,0.5)'
+                    ],
                     borderRadius: 6
                 }]
             },
             options: {
-                responsive: true, maintainAspectRatio: false,
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { ticks: { color: cc.text }, grid: { color: cc.grid } },

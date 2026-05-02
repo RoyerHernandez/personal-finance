@@ -10,7 +10,8 @@ class Settings {
         const lastUpdate = localStorage.getItem('finanzas_lastUpdate');
 
         this.container.innerHTML = `
-            <h1>Configuración</h1>
+            <div class="page-content">
+            <h1 class="mb-lg">Configuracion</h1>
 
             <div class="section">
                 <div class="section-header" onclick="toggleSection(this)">
@@ -89,6 +90,7 @@ class Settings {
                     <p style="font-size:0.82rem"><strong>Privacidad:</strong> Todos tus datos son locales</p>
                     <p style="font-size:0.82rem"><strong>Última actualización:</strong> ${lastUpdate ? new Date(lastUpdate).toLocaleString('es-CO') : 'Hoy'}</p>
                 </div>
+            </div>
             </div>
         `;
     }

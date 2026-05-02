@@ -12,8 +12,9 @@ class Periods {
         const names = Object.keys(periods);
 
         this.container.innerHTML = `
+            <div class="page-content">
             <div class="flex-between mb-lg">
-                <h1>Períodos de Pago</h1>
+                <h1>Periodos de Pago</h1>
                 <button class="btn btn-primary" onclick="app.currentModule.showCreateModal()">+ Nuevo Período</button>
             </div>
 
@@ -30,6 +31,7 @@ class Periods {
                 ${this.selectedPeriod ? this.renderPeriodDetail(this.selectedPeriod) : ''}
             ` : '<div class="alert alert-info">No hay períodos. Crea uno para empezar.</div>'}
 
+            </div>
             <div id="periodModal" class="modal">
                 <div class="modal-content">
                     <div class="modal-header">Nuevo Período</div>

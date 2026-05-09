@@ -98,6 +98,14 @@ class Expenses {
                             <label>Fecha</label>
                             <input type="date" id="expDate">
                         </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <select id="expEstado">
+                                <option value="pagado">\u2713 Pagado</option>
+                                <option value="pendiente">\u26A0 Pendiente</option>
+                                <option value="vencido">\u2717 Vencido</option>
+                            </select>
+                        </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" onclick="app.currentModule.closeModal()">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Guardar</button>
@@ -127,13 +135,14 @@ class Expenses {
     renderTable(expenses) {
         if (!expenses.length) return '<div style="padding:var(--spacing-lg)"><p class="text-muted">Sin gastos registrados</p></div>';
         const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-        let html = '<div class="table-container"><table><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th class="text-right">Monto</th><th></th></tr></thead><tbody>';
+        let html = '<div class="table-container"><table><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th class="text-right">Monto</th><th>Estado</th><th></th></tr></thead><tbody>';
         sorted.forEach(e => {
             html += `<tr>
                 <td>${new Date(e.date || Date.now()).toLocaleDateString('es-CO')}</td>
                 <td>${e.category}</td>
                 <td>${e.description || '—'}</td>
                 <td class="text-right font-bold">${fmt(e.amount)}</td>
+                <td>${statusSelect(e.estado, `app.currentModule.onEditExpense(${e.id},'estado',this.value)`)}</td>
                 <td><button class="btn-icon danger" onclick="app.currentModule.deleteExpense(${e.id})">✕</button></td>
             </tr>`;
         });
@@ -160,11 +169,22 @@ class Expenses {
         const amount = parseFloat(document.getElementById('expAmount').value);
         const description = document.getElementById('expDesc').value;
         const date = document.getElementById('expDate').value;
+        const estado = document.getElementById('expEstado').value;
         if (!category || !amount) { showToast('Completa categoría y monto', 'error'); return; }
-        financeData.addExpense({ category, amount, description, date: date || new Date().toISOString().split('T')[0] });
+        financeData.addExpense({ category, amount, description, estado, date: date || new Date().toISOString().split('T')[0] });
         this.closeModal();
         this.render();
         showToast('Gasto registrado', 'success');
+    }
+
+    onEditExpense(id, field, value) {
+        const items = financeData.getExpenses();
+        const item = items.find(e => e.id === id);
+        if (item) {
+            item[field] = value;
+            financeData.saveData();
+            showToast('Guardado', 'success');
+        }
     }
 
     deleteExpense(id) {

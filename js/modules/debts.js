@@ -114,6 +114,10 @@ class Debts {
                     <input class="inline-input text-center" type="number" step="0.01" value="${d.rate || 0}" style="width:80px;font-weight:600;font-size:0.85rem"
                         onchange="app.currentModule.onEditNum(${d.id},'rate',this.value)">
                 </div>
+                <div style="text-align:center">
+                    <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase">Estado</div>
+                    ${statusSelect(d.estado, `app.currentModule.onEdit(${d.id},'estado',this.value)`)}
+                </div>
             </div>
             <div class="product-actions">
                 <button class="btn-icon danger" onclick="app.currentModule.deleteDebt(${d.id})" title="Eliminar">✕</button>
@@ -139,7 +143,7 @@ class Debts {
         if (!amount || isNaN(amount)) return;
         financeData.addDebt({
             name, initialAmount: amount, currentAmount: amount,
-            monthlyPayment: 0, rate: 0, startDate: new Date().toISOString().split('T')[0]
+            monthlyPayment: 0, rate: 0, estado: 'pendiente', startDate: new Date().toISOString().split('T')[0]
         });
         this.render();
         showToast('Deuda creada', 'success');

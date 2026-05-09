@@ -23,6 +23,14 @@ const CATEGORIAS = ['Vivienda', 'Transporte', 'Alimentación', 'Educación', 'Se
 const FRECUENCIAS = ['quincenal', 'mensual', 'semanal', 'única vez', 'anual'];
 const ESTADOS = ['pendiente', 'pagado', 'vencido'];
 
+/** Renders a status select with icon and color */
+function statusSelect(estado, onchangeExpr) {
+    const e = estado || 'pendiente';
+    return `<select class="inline-select status-select ${e}" onchange="${onchangeExpr};this.className='inline-select status-select '+this.value">
+        ${ESTADOS.map(s => `<option value="${s}" ${e === s ? 'selected' : ''}>${s === 'pagado' ? '\u2713 Pagado' : s === 'pendiente' ? '\u26A0 Pendiente' : '\u2717 Vencido'}</option>`).join('')}
+    </select>`;
+}
+
 class FinanceData {
     constructor() {
         this.storageKey = 'finanzas_v1';
@@ -49,55 +57,22 @@ class FinanceData {
                 periodType: 'monthly'
             },
             debts: [
-                { id: 1, name: 'Cuota de la Casa', initialAmount: 14749153, currentAmount: 14749153, monthlyPayment: 450000, rate: 0, startDate: '2024-01-01' },
-                { id: 2, name: 'Av Villas', initialAmount: 12757000, currentAmount: 12757000, monthlyPayment: 1740000, rate: 0, startDate: '2024-01-01' },
-                { id: 3, name: 'Bancolombia TC', initialAmount: 7598276, currentAmount: 7598276, monthlyPayment: 475186, rate: 0, startDate: '2024-01-01' },
-                { id: 4, name: 'Crédito Davivienda', initialAmount: 2200000, currentAmount: 2200000, monthlyPayment: 0, rate: 0, startDate: '2024-01-01' },
-                { id: 5, name: 'Fincomercio', initialAmount: 4500000, currentAmount: 4500000, monthlyPayment: 0, rate: 0, startDate: '2024-01-01' },
-                { id: 6, name: 'TC Finandina', initialAmount: 3400000, currentAmount: 3400000, monthlyPayment: 390000, rate: 0, startDate: '2024-01-01' },
-                { id: 7, name: 'TC Cooperativa', initialAmount: 2500000, currentAmount: 2500000, monthlyPayment: 260000, rate: 0, startDate: '2024-01-01' }
+                { id: 1, name: 'Cuota de la Casa', initialAmount: 14749153, currentAmount: 14749153, monthlyPayment: 450000, rate: 0, estado: 'pendiente', startDate: '2024-01-01' },
+                { id: 2, name: 'Av Villas', initialAmount: 12757000, currentAmount: 12757000, monthlyPayment: 1740000, rate: 0, estado: 'pendiente', startDate: '2024-01-01' },
+                { id: 3, name: 'Bancolombia TC', initialAmount: 7598276, currentAmount: 7598276, monthlyPayment: 475186, rate: 0, estado: 'pendiente', startDate: '2024-01-01' },
+                { id: 4, name: 'Crédito Davivienda', initialAmount: 2200000, currentAmount: 2200000, monthlyPayment: 0, rate: 0, estado: 'pendiente', startDate: '2024-01-01' },
+                { id: 5, name: 'Fincomercio', initialAmount: 4500000, currentAmount: 4500000, monthlyPayment: 0, rate: 0, estado: 'pendiente', startDate: '2024-01-01' },
+                { id: 6, name: 'TC Finandina', initialAmount: 3400000, currentAmount: 3400000, monthlyPayment: 390000, rate: 0, estado: 'pendiente', startDate: '2024-01-01' },
+                { id: 7, name: 'TC Cooperativa', initialAmount: 2500000, currentAmount: 2500000, monthlyPayment: 260000, rate: 0, estado: 'pendiente', startDate: '2024-01-01' }
             ],
             savings: {
                 accounts: []
             },
-            periods: {
-                'Abril 2026': {
-                    name: 'Abril 2026',
-                    type: 'mensual',
-                    startDate: '2026-04-01',
-                    endDate: '2026-04-30',
-                    items: [
-                        { id: 101, concept: 'Cuota Natación Emily', category: 'Educación', ingreso: 2200000, egreso: 0, saldo: 0, estado: 'pagado', debtId: null },
-                        { id: 102, concept: 'Cuota de la Casa', category: 'Vivienda', ingreso: 0, egreso: 450000, saldo: 0, estado: 'pagado', debtId: 1 },
-                        { id: 103, concept: 'Crédito Davivienda', category: 'Deuda', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: 4 },
-                        { id: 104, concept: 'Av Villas', category: 'Deuda', ingreso: 0, egreso: 1740000, saldo: 0, estado: 'pagado', debtId: 2 },
-                        { id: 105, concept: 'TC Finandina', category: 'Deuda', ingreso: 0, egreso: 390000, saldo: 0, estado: 'pagado', debtId: 6 },
-                        { id: 106, concept: 'Tigo', category: 'Servicios', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
-                        { id: 107, concept: 'Almuerzos', category: 'Alimentación', ingreso: 0, egreso: 0, saldo: 400000, estado: 'pendiente', debtId: null },
-                        { id: 108, concept: 'Transportes', category: 'Transporte', ingreso: 0, egreso: 0, saldo: 140000, estado: 'pendiente', debtId: null },
-                        { id: 109, concept: 'Movistar mío', category: 'Servicios', ingreso: 0, egreso: 323000, saldo: 0, estado: 'pagado', debtId: null },
-                        { id: 110, concept: 'Movistar Laus', category: 'Servicios', ingreso: 0, egreso: 51000, saldo: 0, estado: 'pagado', debtId: null },
-                        { id: 111, concept: 'Universidad Laus', category: 'Educación', ingreso: 0, egreso: 1250000, saldo: 0, estado: 'pagado', debtId: null },
-                        { id: 112, concept: 'Cadena', category: 'Otro', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
-                        { id: 113, concept: 'Apartamento', category: 'Vivienda', ingreso: 0, egreso: 1090000, saldo: 0, estado: 'pagado', debtId: null },
-                        { id: 114, concept: 'Ahorro Littio', category: 'Ahorro', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: null },
-                        { id: 201, concept: 'Movistar (Salario)', category: 'Servicios', ingreso: 3000000, egreso: 160000, saldo: 0, estado: 'pagado', debtId: null },
-                        { id: 202, concept: 'Bancolombia TC', category: 'Deuda', ingreso: 0, egreso: 475186, saldo: 0, estado: 'pagado', debtId: 3 },
-                        { id: 203, concept: 'TC Cooperativa', category: 'Deuda', ingreso: 0, egreso: 260000, saldo: 0, estado: 'pagado', debtId: 7 },
-                        { id: 204, concept: 'Ahorro Programado Cooperativa', category: 'Ahorro', ingreso: 0, egreso: 0, saldo: 71000, estado: 'pendiente', debtId: null },
-                        { id: 205, concept: 'Fincomercio', category: 'Deuda', ingreso: 0, egreso: 0, saldo: 0, estado: 'pendiente', debtId: 5 },
-                        { id: 208, concept: 'Recibos', category: 'Servicios', ingreso: 0, egreso: 200000, saldo: 0, estado: 'pagado', debtId: null },
-                        { id: 209, concept: 'Abuelo', category: 'Otro', ingreso: 0, egreso: 0, saldo: 60000, estado: 'pendiente', debtId: null },
-                        { id: 210, concept: 'Skandia', category: 'Seguros', ingreso: 0, egreso: 350000, saldo: 0, estado: 'pagado', debtId: null },
-                        { id: 212, concept: 'Impuesto', category: 'Otro', ingreso: 0, egreso: 300000, saldo: 0, estado: 'pagado', debtId: null }
-                    ]
-                }
-            },
             expenses: { items: [], monthlyTarget: 500000 },
             income: {
                 sources: [
-                    { id: 1, name: 'Cuota Natación Emily', frequency: 'mensual', estimado: 2200000, real: 2200000, period: 'Abril 2026' },
-                    { id: 2, name: 'Movistar (Salario)', frequency: 'mensual', estimado: 3000000, real: 3000000, period: 'Abril 2026' }
+                    { id: 1, name: 'Cuota Natación Emily', frequency: 'mensual', estimado: 2200000, real: 2200000, estado: 'pagado' },
+                    { id: 2, name: 'Movistar (Salario)', frequency: 'mensual', estimado: 3000000, real: 3000000, estado: 'pagado' }
                 ]
             }
         };
@@ -106,48 +81,6 @@ class FinanceData {
     saveData() {
         localStorage.setItem(this.storageKey, JSON.stringify(this.data));
         localStorage.setItem('finanzas_lastUpdate', new Date().toISOString());
-    }
-
-    // --- Períodos ---
-    getPeriods() { return this.data.periods || {}; }
-    getPeriod(name) { return this.data.periods[name] || null; }
-
-    setPeriod(name, periodData) {
-        this.data.periods[name] = { name, ...periodData };
-        this.saveData();
-    }
-
-    deletePeriod(name) {
-        delete this.data.periods[name];
-        this.saveData();
-    }
-
-    addItemToPeriod(periodName, item) {
-        const p = this.getPeriod(periodName);
-        if (!p) return null;
-        if (!p.items) p.items = [];
-        item.id = Date.now();
-        p.items.push(item);
-        this.saveData();
-        return item;
-    }
-
-    updateItemInPeriod(periodName, itemId, updates) {
-        const p = this.getPeriod(periodName);
-        if (!p || !p.items) return null;
-        const item = p.items.find(i => i.id === itemId);
-        if (!item) return null;
-        Object.assign(item, updates);
-        this.saveData();
-        return item;
-    }
-
-    deleteItemFromPeriod(periodName, itemId) {
-        const p = this.getPeriod(periodName);
-        if (p && p.items) {
-            p.items = p.items.filter(i => i.id !== itemId);
-            this.saveData();
-        }
     }
 
     // --- Deudas ---
@@ -170,58 +103,26 @@ class FinanceData {
 
     deleteDebt(id) {
         this.data.debts = this.data.debts.filter(d => d.id !== id);
-        Object.values(this.data.periods).forEach(p => {
-            (p.items || []).forEach(item => {
-                if (item.debtId === id) item.debtId = null;
-            });
-        });
         this.saveData();
     }
 
     // --- Cálculos ---
-    calcPeriodo(periodName) {
-        const p = this.getPeriod(periodName);
-        if (!p) return { totIngreso: 0, totEgreso: 0, totSaldo: 0, neto: 0 };
-        const items = p.items || [];
-
-        // Income: use income sources linked to this period (real), fallback to period items
-        const sources = this.getIncomeSources().filter(s => s.period === periodName);
-        const totIngreso = sources.length > 0
-            ? sources.reduce((s, src) => s + (src.real || 0), 0)
-            : items.reduce((s, i) => s + (i.ingreso || 0), 0);
-
-        const totEgreso = items.reduce((s, i) => s + (i.egreso || 0), 0);
-        const totSaldo = items.reduce((s, i) => s + (i.saldo || 0), 0);
-        return { totIngreso, totEgreso, totSaldo, neto: totIngreso - totEgreso - totSaldo };
-    }
-
     getGeneralSummary() {
-        // Income from income sources (authoritative)
-        const sources = this.getIncomeSources();
-        let totalIncome = sources.reduce((s, src) => s + (src.real || 0), 0);
-
-        // Expenses and saldo from periods
-        const periods = Object.keys(this.data.periods);
-        let totalExpenses = 0, totalSaldo = 0;
-        periods.forEach(name => {
-            const c = this.calcPeriodo(name);
-            totalExpenses += c.totEgreso;
-            totalSaldo += c.totSaldo;
-        });
-
-        // If no income sources exist, fall back to period income
-        if (sources.length === 0) {
-            periods.forEach(name => {
-                const c = this.calcPeriodo(name);
-                totalIncome += c.totIngreso;
-            });
-        }
+        const totalIncome = this.getIncomeSources().reduce((s, src) => s + (src.real || 0), 0);
+        const totalDebtPayments = this.getDebts().reduce((s, d) => s + (d.monthlyPayment || 0), 0);
+        const totalExpensesHormiga = this.getExpenses().reduce((s, e) => s + (e.amount || 0), 0);
+        const totalExpenses = totalDebtPayments + totalExpensesHormiga;
+        const totalSavings = this.getTotalSavings();
+        const totalDebt = this.getTotalDebt();
 
         return {
-            totalIncome, totalExpenses, totalSaldo,
-            neto: totalIncome - totalExpenses - totalSaldo,
-            totalDebt: this.getTotalDebt(),
-            totalSavings: this.getTotalSavings()
+            totalIncome,
+            totalExpenses,
+            totalDebtPayments,
+            totalExpensesHormiga,
+            neto: totalIncome - totalExpenses,
+            totalDebt,
+            totalSavings
         };
     }
 

@@ -29,7 +29,8 @@ class Settings {
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Tipo de Período</label>
+                            <label>Frecuencia de Aportes</label>
+                            <p class="text-muted" style="font-size:0.78rem;margin-bottom:6px">Define cada cuanto registras tus ingresos, gastos y pagos de deuda</p>
                             <select id="periodType">
                                 <option value="monthly" ${settings.periodType === 'monthly' ? 'selected' : ''}>Mensual</option>
                                 <option value="biweekly" ${settings.periodType === 'biweekly' ? 'selected' : ''}>Quincenal</option>
@@ -109,7 +110,7 @@ class Settings {
         requestAnimationFrame(() => {
             Guide.start('settings', [
                 { target: '#currency', text: 'Selecciona la <strong>moneda</strong> en la que manejas tus finanzas.', arrow: 'top' },
-                { target: '#periodType', text: 'Elige como organizas tus periodos: <strong>mensual, quincenal o personalizado</strong>.', arrow: 'top' },
+                { target: '#periodType', text: 'Define la <strong>frecuencia</strong> con la que registras tus aportes: mensual, quincenal o personalizado.', arrow: 'top' },
                 { target: '.btn-group', text: 'Descarga un <strong>respaldo</strong> de tus datos en JSON o CSV para guardarlos en tu computador.', arrow: 'top' },
                 { target: '#fileUploadArea', text: 'Sube un <strong>archivo JSON</strong> para restaurar tus datos. Puedes arrastrarlo o seleccionarlo.', arrow: 'top' },
                 { target: '.btn.btn-danger', text: '<strong>Zona de peligro:</strong> esto borra TODOS tus datos. Usalo solo si quieres empezar de cero.', arrow: 'top' }

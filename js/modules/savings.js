@@ -61,6 +61,7 @@ class Savings {
                                 <th>Tipo</th>
                                 <th class="text-right">Saldo</th>
                                 <th class="text-right">Tasa % E.A.</th>
+                                <th>Estado</th>
                                 <th>Notas</th>
                                 <th></th>
                             </tr></thead>
@@ -71,7 +72,7 @@ class Savings {
                                 <tr style="font-weight:700;border-top:2px solid var(--border-color)">
                                     <td colspan="2">Total</td>
                                     <td class="text-right text-success">${fmt(total)}</td>
-                                    <td colspan="3"></td>
+                                    <td colspan="4"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -112,6 +113,7 @@ class Savings {
             </td>
             <td><input class="inline-input text-right text-success" type="number" value="${a.balance || 0}" style="font-weight:700" onchange="app.currentModule.onEditNum(${a.id},'balance',this.value)"></td>
             <td><input class="inline-input text-right" type="number" step="0.01" value="${a.rate || 0}" style="width:80px" onchange="app.currentModule.onEditNum(${a.id},'rate',this.value)"></td>
+            <td>${statusSelect(a.estado, `app.currentModule.onEdit(${a.id},'estado',this.value)`)}</td>
             <td><input class="inline-input" value="${a.notes || ''}" placeholder="..." onchange="app.currentModule.onEdit(${a.id},'notes',this.value)"></td>
             <td><button class="btn-icon danger" onclick="app.currentModule.deleteAccount(${a.id})" title="Eliminar"><span class="material-symbols-rounded" style="font-size:18px">close</span></button></td>
         </tr>`;
@@ -132,7 +134,7 @@ class Savings {
         const entity = prompt('Nombre de la entidad (ej: Bancolombia, Littio, Cooperativa):');
         if (!entity) return;
         financeData.addSaving({
-            entity, type: 'Cuenta de ahorros', balance: 0, rate: 0, notes: ''
+            entity, type: 'Cuenta de ahorros', balance: 0, rate: 0, estado: 'pendiente', notes: ''
         });
         this.render();
         showToast('Cuenta agregada', 'success');

@@ -9,7 +9,6 @@ class Income {
 
     render() {
         const sources = financeData.getIncomeSources();
-        const periods = Object.keys(financeData.getPeriods());
         const totalEstimado = sources.reduce((s, src) => s + (src.estimado || 0), 0);
         const totalReal = sources.reduce((s, src) => s + (src.real || 0), 0);
         const diff = totalReal - totalEstimado;
@@ -62,21 +61,20 @@ class Income {
                                     <th>Frecuencia</th>
                                     <th class="text-right">Estimado</th>
                                     <th class="text-right">Real</th>
-                                    <th>Periodo</th>
                                     <th class="text-right">Diferencia</th>
+                                    <th>Estado</th>
                                     <th></th>
                                 </tr></thead>
                                 <tbody>
-                                    ${sources.map((src, i) => this.renderRow(src, i, periods)).join('')}
+                                    ${sources.map((src, i) => this.renderRow(src, i)).join('')}
                                 </tbody>
                                 <tfoot>
                                     <tr style="font-weight:700;border-top:2px solid var(--border-color)">
                                         <td colspan="2">Totales</td>
                                         <td class="text-right text-success">${fmt(totalEstimado)}</td>
                                         <td class="text-right text-success">${fmt(totalReal)}</td>
-                                        <td></td>
                                         <td class="text-right ${diff >= 0 ? 'text-success' : 'text-danger'}">${fmt(diff)}</td>
-                                        <td></td>
+                                        <td colspan="2"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -102,13 +100,12 @@ class Income {
                 { target: '.income-table thead th:nth-child(2)', text: 'En <strong>Frecuencia</strong> selecciona cada cuanto recibes ese ingreso: quincenal, mensual, semanal, etc.', arrow: 'top' },
                 { target: '.income-table thead th:nth-child(3)', text: 'En <strong>Estimado</strong> escribe cuanto esperas recibir (ej: tu salario bruto). Es tu presupuesto planificado.', arrow: 'top' },
                 { target: '.income-table thead th:nth-child(4)', text: 'En <strong>Real</strong> escribe cuanto recibiste. La diferencia se calcula sola: verde si fue mas, rojo si fue menos.', arrow: 'top' },
-                { target: '.income-table thead th:nth-child(5)', text: 'En <strong>Periodo</strong> asocia el ingreso al mes correspondiente. Esto actualiza el Dashboard automaticamente.', arrow: 'top' },
                 { target: '.kpi.green', text: 'Aqui veras el <strong>resumen total</strong> de tus ingresos. Puedes editar cualquier campo directamente en la tabla.', arrow: 'top' }
             ]);
         });
     }
 
-    renderRow(src, idx, periods) {
+    renderRow(src, idx) {
         const diff = (src.real || 0) - (src.estimado || 0);
         return `<tr>
             <td style="min-width:120px"><input class="inline-input" value="${src.name}" onchange="app.currentModule.onEdit(${idx},'name',this.value)"></td>
@@ -119,13 +116,8 @@ class Income {
             </td>
             <td><input class="inline-input text-right" type="number" value="${src.estimado || 0}" onchange="app.currentModule.onEditNum(${idx},'estimado',this.value)"></td>
             <td><input class="inline-input text-right" type="number" value="${src.real || 0}" onchange="app.currentModule.onEditNum(${idx},'real',this.value)"></td>
-            <td>
-                <select class="inline-select" onchange="app.currentModule.onEdit(${idx},'period',this.value)">
-                    <option value="">--</option>
-                    ${periods.map(p => `<option value="${p}" ${src.period === p ? 'selected' : ''}>${p}</option>`).join('')}
-                </select>
-            </td>
             <td class="text-right font-bold ${diff >= 0 ? 'text-success' : 'text-danger'}">${fmt(diff)}</td>
+            <td>${statusSelect(src.estado, `app.currentModule.onEdit(${idx},'estado',this.value)`)}</td>
             <td><button class="btn-icon danger" onclick="app.currentModule.deleteSource(${idx})" title="Eliminar"><span class="material-symbols-rounded" style="font-size:18px">close</span></button></td>
         </tr>`;
     }
@@ -155,7 +147,7 @@ class Income {
         const name = prompt('Nombre de la fuente de ingreso:');
         if (!name) return;
         const sources = financeData.getIncomeSources();
-        sources.push({ id: Date.now(), name, frequency: 'mensual', estimado: 0, real: 0, period: '' });
+        sources.push({ id: Date.now(), name, frequency: 'mensual', estimado: 0, real: 0, estado: 'pendiente' });
         financeData.data.income.sources = sources;
         financeData.saveData();
         this.render();

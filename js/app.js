@@ -235,7 +235,6 @@ class FinanceApp {
 
         switch (page) {
             case 'dashboard': this.currentModule = new Dashboard(this.container); break;
-            case 'periods':   this.currentModule = new Periods(this.container); break;
             case 'debts':     this.currentModule = new Debts(this.container); break;
             case 'expenses':  this.currentModule = new Expenses(this.container); break;
             case 'income':    this.currentModule = new Income(this.container); break;

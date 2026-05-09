@@ -49,14 +49,17 @@ class FinanceData {
                 periodType: 'monthly'
             },
             debts: [
-                { id: 1, name: 'Cuota de la Casa', initialAmount: 14749153, currentAmount: 14749153, monthlyPayment: 450000, startDate: '2024-01-01' },
-                { id: 2, name: 'Av Villas', initialAmount: 12757000, currentAmount: 12757000, monthlyPayment: 1740000, startDate: '2024-01-01' },
-                { id: 3, name: 'Bancolombia TC', initialAmount: 7598276, currentAmount: 7598276, monthlyPayment: 475186, startDate: '2024-01-01' },
-                { id: 4, name: 'Crédito Davivienda', initialAmount: 2200000, currentAmount: 2200000, monthlyPayment: 0, startDate: '2024-01-01' },
-                { id: 5, name: 'Fincomercio', initialAmount: 4500000, currentAmount: 4500000, monthlyPayment: 0, startDate: '2024-01-01' },
-                { id: 6, name: 'TC Finandina', initialAmount: 3400000, currentAmount: 3400000, monthlyPayment: 390000, startDate: '2024-01-01' },
-                { id: 7, name: 'TC Cooperativa', initialAmount: 2500000, currentAmount: 2500000, monthlyPayment: 260000, startDate: '2024-01-01' }
+                { id: 1, name: 'Cuota de la Casa', initialAmount: 14749153, currentAmount: 14749153, monthlyPayment: 450000, rate: 0, startDate: '2024-01-01' },
+                { id: 2, name: 'Av Villas', initialAmount: 12757000, currentAmount: 12757000, monthlyPayment: 1740000, rate: 0, startDate: '2024-01-01' },
+                { id: 3, name: 'Bancolombia TC', initialAmount: 7598276, currentAmount: 7598276, monthlyPayment: 475186, rate: 0, startDate: '2024-01-01' },
+                { id: 4, name: 'Crédito Davivienda', initialAmount: 2200000, currentAmount: 2200000, monthlyPayment: 0, rate: 0, startDate: '2024-01-01' },
+                { id: 5, name: 'Fincomercio', initialAmount: 4500000, currentAmount: 4500000, monthlyPayment: 0, rate: 0, startDate: '2024-01-01' },
+                { id: 6, name: 'TC Finandina', initialAmount: 3400000, currentAmount: 3400000, monthlyPayment: 390000, rate: 0, startDate: '2024-01-01' },
+                { id: 7, name: 'TC Cooperativa', initialAmount: 2500000, currentAmount: 2500000, monthlyPayment: 260000, rate: 0, startDate: '2024-01-01' }
             ],
+            savings: {
+                accounts: []
+            },
             periods: {
                 'Abril 2026': {
                     name: 'Abril 2026',
@@ -217,7 +220,8 @@ class FinanceData {
         return {
             totalIncome, totalExpenses, totalSaldo,
             neto: totalIncome - totalExpenses - totalSaldo,
-            totalDebt: this.getTotalDebt()
+            totalDebt: this.getTotalDebt(),
+            totalSavings: this.getTotalSavings()
         };
     }
 
@@ -240,6 +244,31 @@ class FinanceData {
 
     // --- Ingresos ---
     getIncomeSources() { return this.data.income?.sources || []; }
+
+    // --- Ahorros ---
+    getSavings() { return this.data.savings?.accounts || []; }
+    getTotalSavings() { return this.getSavings().reduce((s, a) => s + (a.balance || 0), 0); }
+
+    addSaving(account) {
+        if (!this.data.savings) this.data.savings = { accounts: [] };
+        if (!this.data.savings.accounts) this.data.savings.accounts = [];
+        account.id = Date.now();
+        this.data.savings.accounts.push(account);
+        this.saveData();
+        return account;
+    }
+
+    updateSaving(id, updates) {
+        const acc = this.getSavings().find(a => a.id === id);
+        if (acc) { Object.assign(acc, updates); this.saveData(); }
+        return acc;
+    }
+
+    deleteSaving(id) {
+        if (!this.data.savings) return;
+        this.data.savings.accounts = this.getSavings().filter(a => a.id !== id);
+        this.saveData();
+    }
 
     // --- Settings ---
     getSettings() { return this.data.settings || {}; }

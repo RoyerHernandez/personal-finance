@@ -173,9 +173,13 @@ class Settings {
     }
 
     exportCSV() {
-        let csv = 'Tipo,Nombre,Valor Inicial,Saldo Actual,Cuota Mensual\n';
+        let csv = 'Tipo,Nombre,Valor Inicial,Saldo Actual,Cuota Mensual,Tasa %\n';
         financeData.getDebts().forEach(d => {
-            csv += `"Deuda","${d.name}","${d.initialAmount}","${d.currentAmount}","${d.monthlyPayment}"\n`;
+            csv += `"Deuda","${d.name}","${d.initialAmount}","${d.currentAmount}","${d.monthlyPayment}","${d.rate || 0}"\n`;
+        });
+        csv += '\nTipo,Entidad,Saldo,Tasa %,Tipo Cuenta,Notas\n';
+        financeData.getSavings().forEach(a => {
+            csv += `"Ahorro","${a.entity}","${a.balance}","${a.rate || 0}","${a.type}","${a.notes || ''}"\n`;
         });
         csv += '\nTipo,Categoría,Descripción,Monto,Fecha\n';
         financeData.getExpenses().forEach(e => {

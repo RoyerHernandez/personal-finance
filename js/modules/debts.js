@@ -96,18 +96,23 @@ class Debts {
             <div style="display:flex;gap:var(--spacing-lg);align-items:center;flex-wrap:wrap">
                 <div style="text-align:center">
                     <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase">Inicial</div>
-                    <input class="inline-input text-center" type="number" value="${d.initialAmount}" style="width:130px;font-weight:600;font-size:0.85rem"
+                    <input class="inline-input text-center" type="number" value="${d.initialAmount}" style="width:120px;font-weight:600;font-size:0.85rem"
                         onchange="app.currentModule.onEditNum(${d.id},'initialAmount',this.value)">
                 </div>
                 <div style="text-align:center">
                     <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase">Saldo actual</div>
-                    <input class="inline-input text-center text-danger" type="number" value="${d.currentAmount}" style="width:130px;font-weight:700;font-size:0.85rem"
+                    <input class="inline-input text-center text-danger" type="number" value="${d.currentAmount}" style="width:120px;font-weight:700;font-size:0.85rem"
                         onchange="app.currentModule.onEditNum(${d.id},'currentAmount',this.value)">
                 </div>
                 <div style="text-align:center">
                     <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase">Cuota mensual</div>
-                    <input class="inline-input text-center" type="number" value="${d.monthlyPayment || 0}" style="width:130px;font-weight:600;font-size:0.85rem"
+                    <input class="inline-input text-center" type="number" value="${d.monthlyPayment || 0}" style="width:120px;font-weight:600;font-size:0.85rem"
                         onchange="app.currentModule.onEditNum(${d.id},'monthlyPayment',this.value)">
+                </div>
+                <div style="text-align:center">
+                    <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase">Tasa % E.A.</div>
+                    <input class="inline-input text-center" type="number" step="0.01" value="${d.rate || 0}" style="width:80px;font-weight:600;font-size:0.85rem"
+                        onchange="app.currentModule.onEditNum(${d.id},'rate',this.value)">
                 </div>
             </div>
             <div class="product-actions">
@@ -134,7 +139,7 @@ class Debts {
         if (!amount || isNaN(amount)) return;
         financeData.addDebt({
             name, initialAmount: amount, currentAmount: amount,
-            monthlyPayment: 0, startDate: new Date().toISOString().split('T')[0]
+            monthlyPayment: 0, rate: 0, startDate: new Date().toISOString().split('T')[0]
         });
         this.render();
         showToast('Deuda creada', 'success');

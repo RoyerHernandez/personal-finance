@@ -239,6 +239,7 @@ class FinanceApp {
             case 'debts':     this.currentModule = new Debts(this.container); break;
             case 'expenses':  this.currentModule = new Expenses(this.container); break;
             case 'income':    this.currentModule = new Income(this.container); break;
+            case 'savings':   this.currentModule = new Savings(this.container); break;
             case 'settings':  this.currentModule = new Settings(this.container); break;
             default: this.loadPage('dashboard'); return;
         }

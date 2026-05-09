@@ -26,13 +26,13 @@ class Dashboard {
                 </div>
 
                 <!-- KPIs -->
-                <div class="grid grid-4">
+                <div class="grid grid-5">
                     <div class="kpi green">
-                        <div class="kpi-label">Ingresos del Mes</div>
+                        <div class="kpi-label">Ingresos</div>
                         <div class="kpi-value">${fmt(s.totalIncome)}</div>
                     </div>
                     <div class="kpi red">
-                        <div class="kpi-label">Egresos del Mes</div>
+                        <div class="kpi-label">Egresos</div>
                         <div class="kpi-value">${fmt(s.totalExpenses)}</div>
                     </div>
                     <div class="kpi ${s.neto >= 0 ? 'blue' : 'red'}">
@@ -43,6 +43,11 @@ class Dashboard {
                         <div class="kpi-label">Deuda Total</div>
                         <div class="kpi-value">${fmt(s.totalDebt)}</div>
                         <div class="kpi-change">${debts.length} deudas</div>
+                    </div>
+                    <div class="kpi green">
+                        <div class="kpi-label">Ahorros</div>
+                        <div class="kpi-value">${fmt(s.totalSavings)}</div>
+                        <div class="kpi-change">${financeData.getSavings().length} cuentas</div>
                     </div>
                 </div>
 
@@ -63,6 +68,10 @@ class Dashboard {
                     <a class="quick-action" onclick="app.loadPage('income')">
                         <span class="quick-action-icon">&#x1F4B0;</span>
                         Ingresos
+                    </a>
+                    <a class="quick-action" onclick="app.loadPage('savings')">
+                        <span class="quick-action-icon">&#x1F3E6;</span>
+                        Ahorros
                     </a>
                     <a class="quick-action" onclick="app.loadPage('settings')">
                         <span class="quick-action-icon">&#x1F4E4;</span>

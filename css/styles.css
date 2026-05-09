@@ -478,6 +478,7 @@ h3 { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-botto
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-5 { grid-template-columns: repeat(5, 1fr); }
 
 /* === KPI Cards === */
 .kpi {
@@ -1030,7 +1031,7 @@ select option { background: var(--bg-surface); }
 
 /* === Responsive === */
 @media (max-width: 1024px) {
-    .grid-2, .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: repeat(2, 1fr); }
     .dash-top, .dash-bottom { padding-left: 16px; padding-right: 16px; }
 }
 
@@ -1067,7 +1068,7 @@ select option { background: var(--bg-surface); }
 
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
     /* KPI cards: 2 columns on mobile */
-    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-4, .grid-5 { grid-template-columns: repeat(2, 1fr); }
     .stats-row { grid-template-columns: repeat(2, 1fr); }
 
     .quick-actions { flex-wrap: nowrap; }

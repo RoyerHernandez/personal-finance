@@ -10,8 +10,8 @@ class Expenses {
     render() {
         const expenses = financeData.getExpenses();
         const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
-        const monthlyTarget = 500000;
-        const pct = Math.min(Math.round((total / monthlyTarget) * 100), 100);
+        const monthlyTarget = financeData.getExpenseTarget();
+        const pct = monthlyTarget > 0 ? Math.min(Math.round((total / monthlyTarget) * 100), 100) : 0;
 
         this.container.innerHTML = `
             <div class="page-content">
@@ -27,7 +27,11 @@ class Expenses {
                 </div>
                 <div class="kpi blue">
                     <div class="kpi-label">Meta Mensual</div>
-                    <div class="kpi-value">${fmt(monthlyTarget)}</div>
+                    <div class="kpi-value" style="display:flex;align-items:center;justify-content:center;gap:4px">
+                        <input type="number" class="inline-input text-center" value="${monthlyTarget}"
+                            style="width:140px;font-size:inherit;font-weight:inherit;color:inherit"
+                            onchange="app.currentModule.updateTarget(this.value)">
+                    </div>
                 </div>
                 <div class="kpi ${total <= monthlyTarget ? 'green' : 'orange'}">
                     <div class="kpi-label">Disponible</div>
@@ -135,6 +139,13 @@ class Expenses {
         });
         html += '</tbody></table></div>';
         return html;
+    }
+
+    updateTarget(value) {
+        const val = parseFloat(value) || 0;
+        financeData.setExpenseTarget(val);
+        this.render();
+        showToast('Meta actualizada', 'success');
     }
 
     showAddModal() {

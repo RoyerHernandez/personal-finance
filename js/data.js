@@ -90,7 +90,7 @@ class FinanceData {
                     ]
                 }
             },
-            expenses: { items: [] },
+            expenses: { items: [], monthlyTarget: 500000 },
             income: {
                 sources: [
                     { id: 1, name: 'Cuota Natación Emily', frequency: 'mensual', estimado: 2200000, real: 2200000, period: 'Abril 2026' },
@@ -223,6 +223,12 @@ class FinanceData {
 
     // --- Gastos hormiga ---
     getExpenses() { return this.data.expenses?.items || []; }
+    getExpenseTarget() { return this.data.expenses?.monthlyTarget ?? 500000; }
+    setExpenseTarget(val) {
+        if (!this.data.expenses) this.data.expenses = {};
+        this.data.expenses.monthlyTarget = val;
+        this.saveData();
+    }
     addExpense(expense) {
         if (!this.data.expenses) this.data.expenses = {};
         if (!this.data.expenses.items) this.data.expenses.items = [];
